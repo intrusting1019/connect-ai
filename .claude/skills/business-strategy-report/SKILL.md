@@ -1,27 +1,31 @@
 ---
 name: business-strategy-report
 description: >-
-  Consolidate business-planning / idea / strategy source material (screenshots,
-  notes, transcripts, URLs, YouTube summaries) into ONE verified, authority-backed
-  report scored for reliability. Use this WHENEVER the user wants to organize,
-  summarize, fact-check, or upgrade content about 사업 기획, 사업 전략, 아이디어 구상,
-  1인 기업/창업, 마인드셋, or business strategy/planning — including requests like
-  "이 내용 정리해서 보고서 만들어줘", "검수하고 신뢰도 매겨줘", "권위 있는 사업가 생각 알려줘",
-  "turn these notes into a strategy report", "fact-check this business advice", or
-  "what do great founders say about X". It carries a curated, source-checked knowledge
-  base of 32 authorities (Porter, Drucker, Roger Martin, Christensen, Blue Ocean,
-  Rumelt, Paul Graham, Thiel, Andreessen, Blank, The Mom Test, Osterwalder, Hormozi,
-  Eric Ries, IDEO, OKR, Sean Ellis, Sinek, Bezos, Musk, Jobs, Naval, Munger/Buffett,
-  Hoffman, MrBeast, Seth Godin, Dunford, Sutherland, 정주영, 이병철, 김승호, 김봉진,
-  김범수, 김범석) and a 3-pass verification + 5-point reliability method. Apply it even
-  when the user doesn't say the word "보고서" but is clearly gathering or vetting
-  business/startup ideas.
+  Business-strategy copilot: organize, fact-check, and upgrade business/startup
+  material into ONE reliability-scored report — AND develop raw ideas with the user
+  through coached 아이디어 회의, then turn the meeting into an execution plan and
+  execute it. Use this WHENEVER the user is (a) gathering, summarizing, verifying, or
+  strengthening content about 사업 기획·전략, 아이디어 구상, 1인 기업/창업, 마인드셋,
+  or startup methodology, or (b) wants to brainstorm/구체화 a business idea together,
+  build an 실행계획/로드맵, validate an idea, or get help actually executing (인터뷰
+  스크립트, 랜딩페이지, MVP 스펙, 주간 체크인). Typical asks: "이 내용 정리해서 보고서
+  만들어줘", "검수하고 신뢰도 매겨줘", "이 아이디어 같이 구체화하자 / 회의하자",
+  "실행계획 세워줘", "권위 있는 사업가 생각 알려줘", "fact-check this business advice",
+  "what do great founders say about X". Carries a source-checked knowledge base of 32
+  authorities (Porter, Drucker, Roger Martin, Christensen, Blue Ocean, Rumelt, Graham,
+  Thiel, Andreessen, Blank, Mom Test, Osterwalder, Hormozi, Ries, IDEO, OKR, Sean
+  Ellis, Sinek, Bezos, Musk, Jobs, Naval, Munger/Buffett, Hoffman, MrBeast, Godin,
+  Dunford, Sutherland, 정주영, 이병철, 김승호, 김봉진, 김범수, 김범석) plus a 3-pass
+  verification + 5-point reliability method. Trigger even without the words "보고서" or
+  "회의" when the user is clearly vetting, assembling, or developing business/startup
+  thinking — not for generic coding, spreadsheets, resumes, or ad copywriting.
 ---
 
 # Business Strategy Report
 
 Turn raw business-planning material into a **single, verified, authority-backed report**
-that scores every claim for reliability. Two capabilities travel together:
+— and carry an idea all the way from **회의(coached development) → 실행계획 → 실행**.
+Three capabilities travel together:
 
 1. **A curated knowledge base** — 32 of the most authoritative voices on business
    definition, idea generation, planning method, and founder mindset, each item already
@@ -29,18 +33,27 @@ that scores every claim for reliability. Two capabilities travel together:
    *fact-check* whatever the user brings.
 2. **A report workflow** — consolidate → verify 3× → score reliability → deliver a
    styled `.docx` (or Markdown / slides on request).
+3. **An idea-to-execution workflow** — develop the user's idea in a coached meeting,
+   convert the meeting log into a 90-day execution plan, then produce the execution
+   artifacts and track progress. See `references/idea-to-execution.md`.
 
-The reason both live in one skill: users rarely just want a summary. They want the
-summary *corrected*, *backed by someone credible*, and *rated so they know what to
-trust*. That is the whole value — never hand back an unscored, unverified digest.
+The reason these live in one skill: users rarely just want a summary. They want the
+summary *corrected*, *backed by someone credible*, *rated so they know what to trust* —
+and increasingly, *turned into something they can act on this week*. Never hand back an
+unscored, unverified digest, and never end an idea session without a next action.
 
 ## When to reach for what
 
 - User pastes/uploads material (screenshots, notes, a YouTube digest, an article) and
-  wants it organized/improved → run the **full workflow** below.
+  wants it organized/improved → run the **report workflow** below.
 - User asks what authoritative people say about strategy / ideas / mindset, or wants to
   fact-check a piece of business advice → answer from the **knowledge base** (`references/`),
   still applying the reliability scoring so they can judge trust.
+- User wants to brainstorm, refine, or 구체화 an idea with you; asks for an 실행계획,
+  로드맵, or validation plan; or wants help executing (interview scripts, landing page,
+  MVP spec, weekly check-ins) → read `references/idea-to-execution.md` and run the
+  **idea-to-execution workflow** (meeting → plan → execute). Enter at whichever stage
+  matches what the user already has.
 - User wants a deliverable file → use the **report builder script**.
 
 ## Workflow
@@ -116,6 +129,30 @@ counts) and tell the user it opens in Word/Google Docs; don't block on a PDF pre
 
 On request, adapt the same content into a one-page action checklist, a slide deck (see the
 `pptx` skill), or plain Markdown.
+
+## Idea-to-execution workflow (회의 → 실행계획 → 실행)
+
+Full playbook in `references/idea-to-execution.md` — read it before starting a session.
+The shape:
+
+1. **아이디어 회의** — a coached conversation, not a lecture. Convert knowledge-base
+   frameworks into questions (Mom Test for problem evidence, Thiel's contrarian question,
+   Where-to-Play/How-to-Win, value equation, ERRC). Ask 2–4 focused questions per stage,
+   record every decision in a meeting log, and converge on a one-line 승리 가설 plus the
+   top-3 riskiest assumptions. Challenge the user only when their answer conflicts with a
+   5/5 authority item.
+2. **실행계획 수립** — turn the meeting log into a plan: lean-canvas summary, each risky
+   assumption mapped to a validation experiment **with pre-agreed pass/fail criteria**,
+   and a 90-day OKR roadmap (0–30 검증 / 31–60 MVP / 61–90 첫 고객) with pivot-or-persevere
+   gates. Deliver as `.docx` via the builder or Markdown.
+3. **실행** — produce what Claude can make directly (interview scripts, landing copy,
+   MVP spec, content calendar, deep-research briefs), track the rest as tasks or a
+   committed checklist, and — with the user's consent — run weekly check-ins that judge
+   experiments against their criteria and update the plan.
+
+Enter at any stage: a user with a refined idea skips to planning; one with a plan skips
+to execution. A failed experiment is not the end — it routes back to the meeting (that's
+the Build-Measure-Learn loop working, and worth saying so).
 
 ## Report structure (default template)
 
