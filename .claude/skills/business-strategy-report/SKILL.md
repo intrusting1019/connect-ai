@@ -1,24 +1,18 @@
 ---
 name: business-strategy-report
 description: >-
-  Business-strategy copilot: organize, fact-check, and upgrade business/startup
-  material into ONE reliability-scored report — AND develop raw ideas with the user
-  through coached 아이디어 회의, then turn the meeting into an execution plan and
-  execute it. Use this WHENEVER the user is (a) gathering, summarizing, verifying, or
-  strengthening content about 사업 기획·전략, 아이디어 구상, 1인 기업/창업, 마인드셋,
-  or startup methodology, or (b) wants to brainstorm/구체화 a business idea together,
-  build an 실행계획/로드맵, validate an idea, or get help actually executing (인터뷰
-  스크립트, 랜딩페이지, MVP 스펙, 주간 체크인). Typical asks: "이 내용 정리해서 보고서
-  만들어줘", "검수하고 신뢰도 매겨줘", "이 아이디어 같이 구체화하자 / 회의하자",
-  "실행계획 세워줘", "권위 있는 사업가 생각 알려줘", "fact-check this business advice",
-  "what do great founders say about X". Carries a source-checked knowledge base of 32
-  authorities (Porter, Drucker, Roger Martin, Christensen, Blue Ocean, Rumelt, Graham,
-  Thiel, Andreessen, Blank, Mom Test, Osterwalder, Hormozi, Ries, IDEO, OKR, Sean
-  Ellis, Sinek, Bezos, Musk, Jobs, Naval, Munger/Buffett, Hoffman, MrBeast, Godin,
-  Dunford, Sutherland, 정주영, 이병철, 김승호, 김봉진, 김범수, 김범석) plus a 3-pass
-  verification + 5-point reliability method. Trigger even without the words "보고서" or
-  "회의" when the user is clearly vetting, assembling, or developing business/startup
-  thinking — not for generic coding, spreadsheets, resumes, or ad copywriting.
+  Use this whenever the user wants to develop, organize, verify, or act on business,
+  startup, or founder-mindset thinking — in Korean or English. Reach for it when they:
+  turn notes, screenshots, articles, or video digests about 사업 기획·전략, 아이디어
+  구상, 1인 기업/창업, or 마인드셋 into one consolidated, fact-checked,
+  reliability-scored report; ask what respected founders or strategists say (Porter,
+  Christensen, Graham, Thiel, Naval, Hormozi, 정주영, 김승호…) and how much to trust it;
+  want business claims verified against real sources or backed by proven management
+  theory; or brainstorm/구체화 a raw idea and carry it into a 실행계획·로드맵·검증 plan
+  (interview scripts, MVP, weekly check-ins). Fires on intents like "정리해서 보고서로",
+  "검증하고 신뢰도 매겨줘 / 3점 이상만", "이 아이디어 같이 구체화하자", "실행계획 세워줘",
+  "fact-check this business advice". Not for generic coding, spreadsheets, resumes,
+  UI/UX critique, or ad copywriting.
 ---
 
 # Business Strategy Report
