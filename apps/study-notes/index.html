@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>밑줄 학습 노트</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* Layout: 왼쪽은 노트 서랍(검색·과목·목록), 오른쪽은 책상 위에 놓인 코넬 노트 한 장.
+   라이트 테마는 줄 노트, 다크 테마는 칠판. 빨간 여백선이 단서 칸과 필기 칸을 가른다. */
+:root {
+  --bg: #e9edf4; --pane: #f4f6fa; --paper: #fefefc;
+  --fg: #1b2233; --muted: #566076; --faint: #8a94a8;
+  --line: #d3d9e4; --rule: #d4e0f2; --margin: #e0637a;
+  --accent: #2447c8; --accent-fg: #ffffff; --accent-soft: #e2e8fb;
+  --hl: #ffe35a; --hl-fg: #43370a; --danger: #c5303f;
+  --ink0: #1b2233; --ink1: #2447c8; --ink2: #d2354a; --inkhl: rgba(255, 216, 20, .5);
+  --s0: #2447c8; --s1: #0f8a6a; --s2: #c2571a; --s3: #8a3fc0; --s4: #c22f6b; --s5: #5b6b82;
+  --shadow: 0 10px 28px -18px rgba(27, 34, 51, .45);
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  --font-hand: "Gaegu", "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --lh: 30px;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111a17; --pane: #16221d; --paper: #1d2f28;
+    --fg: #eef1e4; --muted: #aab8ac; --faint: #7d8f84;
+    --line: #31453c; --rule: #2c463c; --margin: #d98490;
+    --accent: #a5c6ff; --accent-fg: #0e1c36; --accent-soft: #22384a;
+    --hl: #f0d54e; --hl-fg: #2b2400; --danger: #ff8f9b;
+    --ink0: #f1f3ea; --ink1: #9dc1ff; --ink2: #ff97a6; --inkhl: rgba(240, 213, 78, .38);
+    --s0: #9dc1ff; --s1: #6fd6b3; --s2: #f0a36b; --s3: #c9a0f0; --s4: #f291b8; --s5: #a9b6c6;
+    --shadow: 0 10px 28px -18px rgba(0, 0, 0, .8);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111a17; --pane: #16221d; --paper: #1d2f28;
+  --fg: #eef1e4; --muted: #aab8ac; --faint: #7d8f84;
+  --line: #31453c; --rule: #2c463c; --margin: #d98490;
+  --accent: #a5c6ff; --accent-fg: #0e1c36; --accent-soft: #22384a;
+  --hl: #f0d54e; --hl-fg: #2b2400; --danger: #ff8f9b;
+  --ink0: #f1f3ea; --ink1: #9dc1ff; --ink2: #ff97a6; --inkhl: rgba(240, 213, 78, .38);
+  --s0: #9dc1ff; --s1: #6fd6b3; --s2: #f0a36b; --s3: #c9a0f0; --s4: #f291b8; --s5: #a9b6c6;
+  --shadow: 0 10px 28px -18px rgba(0, 0, 0, .8);
+  color-scheme: dark;
+}
+
+html { height: 100%; box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }
+[hidden] { display: none !important; }
+body {
+  height: 100%; margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.55 var(--font-body); -webkit-text-size-adjust: 100%;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3, p { margin: 0; }
+h2, h3 { text-wrap: balance; }
+
+/* ---------- 틀 ---------- */
+#app { height: 100%; display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); }
+.list-pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; background: var(--pane); border-right: 1px solid var(--line); }
+.edit-pane { min-width: 0; min-height: 0; overflow-y: auto; }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.btn.only-narrow, .list-note .row-btns.dup-cta { display: none; }
+@media (max-width: 760px) {
+  #app { grid-template-columns: minmax(0, 1fr); }
+  #app:not(.show-editor) .edit-pane { display: none; }
+  #app.show-editor .list-pane { display: none; }
+  .list-pane { border-right: 0; }
+  .btn.only-narrow { display: inline-flex; }
+  .list-note .row-btns.dup-cta { display: flex; }
+  .title { font-size: 25px; }
+  .cols, .row, .add-line { grid-template-columns: minmax(92px, 34%) minmax(0, 1fr); }
+  .row > .cue { font-size: 17px; }
+  .sheet textarea, .static-cell, .cols > *, .add-line > * { padding-left: 9px; padding-right: 9px; }
+  .row > .body { padding-right: 30px; }
+}
+
+/* ---------- 공통 버튼 ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px;
+  padding: 6px 13px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--paper); color: var(--fg); white-space: nowrap;
+}
+.btn:hover { border-color: var(--faint); }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: transparent; font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.quiet { background: transparent; border-color: transparent; color: var(--muted); }
+.btn.quiet:hover { background: var(--accent-soft); color: var(--fg); }
+.btn.danger { color: var(--danger); }
+.btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+.btn:disabled { opacity: .5; cursor: default; }
+
+/* ---------- 목록 칸 ---------- */
+.lp-head { display: flex; align-items: center; gap: 8px; padding-block: 14px 8px; }
+.logo { font: 700 30px/1 var(--font-hand); letter-spacing: -.04em; text-decoration: underline; text-decoration-color: var(--hl); text-decoration-thickness: 6px; text-underline-offset: 2px; text-decoration-skip-ink: none; }
+.logo-sub { font-size: 12px; color: var(--muted); letter-spacing: .08em; margin-top: 6px; }
+.status { margin-left: auto; min-height: 28px; padding: 2px 9px; border: 1px solid transparent; border-radius: 999px; background: transparent; color: var(--muted); font-size: 12px; }
+.status:disabled { cursor: default; }
+.status.error { border-color: var(--danger); color: var(--danger); }
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 190px; padding: 6px;
+  display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+}
+.menu button { text-align: left; padding: 9px 10px; border: 0; border-radius: 6px; background: transparent; }
+.menu button:hover { background: var(--accent-soft); }
+.lp-tools { display: flex; gap: 8px; padding-block: 4px 10px; }
+#q { flex: 1; min-width: 0; min-height: 38px; padding: 6px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding-block: 2px 10px; scrollbar-width: thin; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; flex: none; min-height: 32px; padding: 3px 11px;
+  border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--muted); font-size: 13px; white-space: nowrap;
+}
+.chip[aria-pressed="true"] { background: var(--fg); border-color: var(--fg); color: var(--paper); }
+.chip .n { font-variant-numeric: tabular-nums; opacity: .75; }
+.chip .due-n { padding: 0 6px; border-radius: 999px; background: var(--hl); color: var(--hl-fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--faint); }
+.list { flex: 1; min-height: 0; overflow-y: auto; border-top: 1px solid var(--line); padding-block: 6px 24px; }
+.list-note { display: flex; flex-direction: column; gap: 10px; padding-block: 28px; color: var(--muted); }
+.list-note strong { color: var(--fg); font: 700 22px/1.25 var(--font-hand); letter-spacing: -.04em; }
+.list-note .row-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.note-item {
+  display: grid; gap: 2px; width: 100%; padding: 11px 12px; margin-block: 2px; text-align: left;
+  border: 1px solid transparent; border-radius: 10px; background: transparent;
+}
+.note-item:hover { background: var(--accent-soft); }
+.note-item[aria-current="true"] { background: var(--paper); border-color: var(--line); box-shadow: var(--shadow); }
+.ni-top { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); min-width: 0; }
+.ni-top .subj { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ni-top .date { margin-left: auto; flex: none; font-variant-numeric: tabular-nums; }
+.ni-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ni-snippet { font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.ni-foot { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12px; color: var(--faint); }
+.tagchip { padding: 0 7px; border-radius: 999px; background: var(--hl); color: var(--hl-fg); font-weight: 600; }
+.pin-mark { color: var(--margin); font-weight: 600; }
+
+/* ---------- 책상 / 노트 한 장 ---------- */
+.desk { max-width: 920px; margin: 0 auto; padding-block: 14px 56px; display: flex; flex-direction: column; gap: 12px; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.bar .spacer { flex: 1; }
+.tabs { display: inline-flex; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--pane); }
+.tabs button { min-height: 32px; padding: 3px 12px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); }
+.tabs button[aria-selected="true"] { background: var(--paper); color: var(--fg); font-weight: 600; box-shadow: 0 1px 2px rgba(0, 0, 0, .12); }
+.sheet { background: var(--paper); border: 1px solid var(--line); border-radius: 4px; box-shadow: var(--shadow); min-width: 0; }
+.sheet-head { padding: 18px 18px 12px; border-bottom: 2px solid var(--fg); display: grid; gap: 8px; }
+.title { width: 100%; padding: 0; border: 0; background: transparent; font: 700 30px/1.25 var(--font-hand); letter-spacing: -.04em; }
+.title::placeholder, .sheet textarea::placeholder { color: var(--faint); opacity: 1; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 13px; color: var(--muted); }
+.meta select, .meta input { min-height: 32px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 7px; background: transparent; }
+.meta input { flex: 1; min-width: 140px; }
+.meta .when { font-variant-numeric: tabular-nums; }
+.cols, .row, .add-line { display: grid; grid-template-columns: minmax(92px, 30%) minmax(0, 1fr); }
+.cols > *, .add-line > * { padding: 5px 12px; }
+.cols { font-size: 12px; letter-spacing: .08em; color: var(--muted); border-bottom: 1px solid var(--rule); }
+.cols > :first-child, .add-line > :first-child, .row > .cue { border-right: 1.5px solid var(--margin); }
+.row { position: relative; border-bottom: 1px solid var(--line); }
+.sheet textarea {
+  display: block; width: 100%; margin: 0; padding: 0 12px; border: 0; border-radius: 0; resize: none; overflow: hidden;
+  background: linear-gradient(to bottom, transparent calc(var(--lh) - 1px), var(--rule) calc(var(--lh) - 1px)) 0 0 / 100% var(--lh);
+  line-height: var(--lh); min-height: var(--lh); overflow-wrap: anywhere;
+}
+.sheet textarea:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--accent-soft); }
+.row > .cue { font: 700 19px/var(--lh) var(--font-hand); letter-spacing: -.04em; color: var(--accent); }
+.row > .body { padding-right: 36px; }
+.row-del {
+  position: absolute; right: 4px; top: 2px; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 6px;
+  background: transparent; color: var(--faint); font-size: 18px; line-height: 1; opacity: 0;
+}
+.row:hover .row-del, .row:focus-within .row-del { opacity: 1; }
+.row-del:hover { color: var(--danger); background: var(--accent-soft); }
+.add-line button { justify-self: start; border: 0; background: transparent; color: var(--accent); padding: 4px 0; min-height: 32px; }
+.add-line .hint { font-size: 12px; color: var(--faint); margin-left: 10px; }
+.summary { border-top: 1.5px solid var(--margin); }
+.summary label { display: block; padding: 8px 12px 0; font-size: 12px; letter-spacing: .08em; color: var(--muted); }
+.static-cell { padding: 0 12px; line-height: var(--lh); white-space: pre-wrap; overflow-wrap: anywhere; }
+.note-msg { padding: 40px 18px; color: var(--muted); }
+
+/* ---------- 손필기 ---------- */
+.ink-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--pane); }
+.ink-bar .btn { min-height: 34px; padding: 4px 10px; }
+.swatch { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid var(--line); background: var(--paper); display: inline-grid; place-items: center; }
+.swatch i { width: 16px; height: 16px; border-radius: 50%; }
+.swatch[aria-pressed="true"] { border-color: var(--fg); }
+.sep { width: 1px; align-self: stretch; background: var(--line); }
+.ink-page { position: relative; aspect-ratio: 1000 / 1414; max-width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; box-shadow: var(--shadow); overflow: hidden; }
+.ink-page canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ink-live { touch-action: none; cursor: crosshair; }
+.tool-move .ink-live { touch-action: pan-y; cursor: default; }
+.ink-no { position: absolute; right: 10px; bottom: 6px; font-size: 12px; color: var(--faint); pointer-events: none; font-variant-numeric: tabular-nums; }
+
+/* ---------- 복습 ---------- */
+.review { background: var(--paper); border: 1px solid var(--line); border-radius: 4px; box-shadow: var(--shadow); padding: 22px 20px 24px; display: grid; gap: 16px; }
+.progress { height: 6px; border-radius: 999px; background: var(--rule); overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--accent); }
+.count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.q { font: 700 28px/1.3 var(--font-hand); letter-spacing: -.04em; color: var(--accent); overflow-wrap: anywhere; }
+.a { padding: 12px 14px; border-left: 1.5px solid var(--margin); white-space: pre-wrap; overflow-wrap: anywhere; line-height: var(--lh); max-width: 65ch; }
+.a.veil { color: var(--faint); font-style: normal; }
+.kbd { font-size: 12px; color: var(--faint); }
+.result-big { font: 700 34px/1.2 var(--font-hand); letter-spacing: -.04em; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 0; list-style: none; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.steps li { padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; }
+.steps li.on { background: var(--hl); color: var(--hl-fg); border-color: transparent; font-weight: 600; }
+
+/* ---------- 대화상자 · 알림 ---------- */
+.dlg { width: min(460px, calc(100vw - 32px)); padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); color: var(--fg); box-shadow: var(--shadow); }
+.dlg::backdrop { background: rgba(10, 14, 22, .45); }
+.dlg h2 { font-size: 17px; margin-bottom: 10px; }
+.dlg p { color: var(--muted); }
+.dlg textarea { width: 100%; min-height: 160px; margin-top: 10px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--pane); font-size: 12px; }
+.dlg-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.subj-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.subj-row input { flex: 1; min-width: 0; min-height: 38px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: transparent; }
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 50; max-width: calc(100vw - 32px);
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 10px;
+  background: var(--fg); color: var(--paper); box-shadow: var(--shadow); font-size: 14px;
+}
+.toast button { border: 0; background: transparent; color: var(--hl); font-weight: 600; padding: 2px 4px; }
+@media (prefers-reduced-motion: no-preference) {
+  .note-item, .btn, .chip { transition: background-color .12s, border-color .12s; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside class="list-pane gutter" aria-label="노트 목록">
+    <header class="lp-head">
+      <div>
+        <h1 class="logo">밑줄</h1>
+        <p class="logo-sub">코넬식 학습 노트</p>
+      </div>
+      <button id="status" class="status" type="button" disabled>불러오는 중…</button>
+      <div class="menu-wrap">
+        <button id="menu-btn" class="btn quiet" type="button" aria-haspopup="true" aria-expanded="false" aria-label="메뉴">메뉴</button>
+        <div id="menu" class="menu" hidden>
+          <button type="button" data-act="subjects">과목 관리</button>
+          <button type="button" data-act="export">백업 내보내기 (.json)</button>
+          <button type="button" data-act="import">백업 가져오기</button>
+        </div>
+      </div>
+    </header>
+    <div class="lp-tools">
+      <input id="q" type="search" placeholder="제목 · 내용 · 태그 검색" autocomplete="off" aria-label="노트 검색">
+      <button id="new-note" class="btn primary" type="button">새 노트</button>
+    </div>
+    <nav id="chips" class="chips" aria-label="과목으로 거르기"></nav>
+    <div id="list" class="list"><div class="list-note"><p>노트를 불러오는 중…</p></div></div>
+  </aside>
+  <main id="editor" class="edit-pane"></main>
+</div>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+(() => {
+'use strict';
+document.documentElement.lang = 'ko';
+
+/* ================= 도우미 ================= */
+const $ = (s, r = document) => r.querySelector(s);
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  if (props) for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'value') el.value = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v === true) el.setAttribute(k, '');
+    else el.setAttribute(k, v);
+  }
+  return add(el, kids);
+}
+/* 배열·null이 섞인 자식을 안전하게 붙인다 (DOM의 append는 배열과 null을 글자로 바꿔 버린다) */
+function add(el, ...kids) {
+  for (const kid of kids.flat(Infinity)) {
+    if (kid == null || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+const put = (el, ...kids) => { el.replaceChildren(); return add(el, kids); };
+const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const pad2 = (n) => String(n).padStart(2, '0');
+const ymd = (d = new Date()) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const parseYmd = (s) => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1); };
+const addDays = (s, n) => { const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
+const dayDiff = (a, b) => Math.round((parseYmd(b) - parseYmd(a)) / 864e5);
+const fmtDay = (d) => `${d.getMonth() + 1}월 ${d.getDate()}일`;
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const wide = () => matchMedia('(min-width: 761px)').matches;
+const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+/* ================= 상태 ================= */
+const STEPS = [1, 3, 7, 14, 30];               // 복습 간격(일): 잘 떠올릴 때마다 한 칸씩 늘어난다
+const S = {
+  ready: false, loadError: false,
+  notes: new Map(), meta: { kind: 'meta', subjects: [] },
+  filter: 'all', q: '', currentId: null, tab: 'text', review: null,
+  ink: { tool: 'pen', color: 0, width: 3.5 },
+};
+let backend = null;
+let pads = [];
+let inkOrder = [];
+const inArtifact = !!(window.claude && typeof window.claude.use === 'function');
+let downloadsP = Promise.resolve(null);
+
+function normalizeNote(id, d) {
+  d = d || {};
+  const rows = Array.isArray(d.rows) ? d.rows.map((r) => ({ cue: String(r?.cue ?? ''), body: String(r?.body ?? '') })) : [];
+  return {
+    id, title: String(d.title ?? ''), subject: String(d.subject ?? ''),
+    tags: Array.isArray(d.tags) ? d.tags.map(String) : [],
+    rows: rows.length ? rows : [{ cue: '', body: '' }],
+    summary: String(d.summary ?? ''), pinned: !!d.pinned,
+    created: Number(d.created) || Date.now(), updated: Number(d.updated) || Date.now(),
+    stage: Math.max(0, Math.min(STEPS.length, Number(d.stage) || 0)),
+    due: /^\d{4}-\d{2}-\d{2}$/.test(d.due) ? d.due : addDays(ymd(), 1),
+    lastReview: Number(d.lastReview) || 0, inkPages: Math.max(0, Number(d.inkPages) || 0),
+  };
+}
+const serializeNote = (n) => ({
+  kind: 'note', title: n.title, subject: n.subject, tags: n.tags, rows: n.rows, summary: n.summary, pinned: n.pinned,
+  created: n.created, updated: n.updated, stage: n.stage, due: n.due, lastReview: n.lastReview, inkPages: n.inkPages,
+});
+const hasContent = (n) => !!(n.title.trim() || n.summary.trim() || n.inkPages || n.rows.some((r) => r.cue.trim() || r.body.trim()));
+const isDue = (n, today = ymd()) => hasContent(n) && n.due <= today;
+const subjectOf = (n) => S.meta.subjects.find((s) => s.id === n.subject) || null;
+function dueLabel(n) {
+  const diff = dayDiff(ymd(), n.due);
+  if (diff < 0) return `복습 ${-diff}일 밀림`;
+  if (diff === 0) return '오늘 복습';
+  if (diff === 1) return '내일 복습';
+  return `${diff}일 뒤 복습`;
+}
+
+/* ================= 저장소 =================
+   Claude 아티팩트 안에서는 계정별 비공개 저장소(db)를, 그 밖에서는 이 브라우저(localStorage)를 쓴다.
+   경로: meta · <노트id> · <노트id>/ink/p<쪽> */
+const LS = 'miljul:v1:';
+function localBackend() {
+  let ok = false;
+  try { localStorage.setItem(LS + '__t', '1'); localStorage.removeItem(LS + '__t'); ok = true; } catch { /* 저장소 차단 */ }
+  const mem = new Map();
+  const read = (k) => { if (!ok) return mem.get(k) ?? null; const v = localStorage.getItem(LS + k); return v == null ? null : JSON.parse(v); };
+  return {
+    kind: ok ? 'local' : 'memory',
+    async loadAll() {
+      const keys = ok ? Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i)).filter((k) => k && k.startsWith(LS)).map((k) => k.slice(LS.length)) : [...mem.keys()];
+      const notes = [];
+      let meta = null;
+      for (const k of keys) {
+        if (k.includes('/')) continue;
+        try { const d = read(k); if (k === 'meta') meta = d; else if (d) notes.push({ id: k, data: d }); } catch { /* 깨진 항목은 건너뛴다 */ }
+      }
+      return { meta, notes };
+    },
+    async get(path) { try { return read(path); } catch { return null; } },
+    async set(path, data) { if (ok) localStorage.setItem(LS + path, JSON.stringify(data)); else mem.set(path, clone(data)); },
+    async del(path) { if (ok) localStorage.removeItem(LS + path); else mem.delete(path); },
+  };
+}
+function cloudBackend(db, userId) {
+  const root = db.collection('data/users/' + userId);
+  const ref = (path) => {
+    const p = path.split('/');
+    let r = root.doc(p[0]);
+    for (let i = 1; i + 1 < p.length; i += 2) r = r.collection(p[i]).doc(p[i + 1]);
+    return r;
+  };
+  const once = async (fn) => {
+    try { return await fn(); }
+    catch (e) {
+      if (e && e.code === 'unavailable') { await new Promise((r) => setTimeout(r, 600 + Math.random() * 900)); return fn(); }
+      throw e;
+    }
+  };
+  return {
+    kind: 'cloud',
+    async loadAll() {
+      const snap = await once(() => root.limit(1000).get());
+      const notes = [];
+      let meta = null;
+      for (const d of snap.docs) { const data = clone(d.data() || {}); if (d.id === 'meta') meta = data; else notes.push({ id: d.id, data }); }
+      return { meta, notes };
+    },
+    async get(path) { const s = await once(() => ref(path).get()); return s.exists ? clone(s.data()) : null; },
+    set(path, data) { return once(() => ref(path).set(data)); },
+    del(path) { return once(() => ref(path).delete()); },
+  };
+}
+async function pickBackend() {
+  if (inArtifact) {
+    try {
+      downloadsP = window.claude.use('downloads').catch(() => null);
+      const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      const id = user ? await user.id() : null;
+      if (db && id) return cloudBackend(db, id);
+    } catch { /* 이 화면에서는 계정 저장소를 못 쓴다 → 브라우저 저장으로 */ }
+  }
+  return localBackend();
+}
+
+/* 문서 하나에 한 번에 한 쓰기만. 입력이 몰리면 마지막 상태 한 번만 쓴다. */
+const saver = { pending: new Map(), inflight: new Set(), timer: 0, failed: false };
+function queueSave(path, producer, delay = 700) {
+  saver.pending.set(path, producer);
+  setStatus();
+  clearTimeout(saver.timer);
+  saver.timer = setTimeout(flush, delay);
+}
+function flush() {
+  clearTimeout(saver.timer);
+  for (const path of [...saver.pending.keys()]) writeOne(path);
+}
+async function writeOne(path) {
+  if (!backend || saver.inflight.has(path)) return;
+  const producer = saver.pending.get(path);
+  saver.pending.delete(path);
+  saver.inflight.add(path);
+  setStatus();
+  let ok = true;
+  try {
+    const data = producer();
+    if (data == null) await backend.del(path); else await backend.set(path, data);
+  } catch (e) {
+    ok = false;
+    if (!saver.pending.has(path)) saver.pending.set(path, producer);
+    if (!saver.failed) toast(e && e.code === 'quota_exceeded' ? '저장 공간이 가득 찼어요. 안 쓰는 노트를 지워 주세요.' : '저장하지 못했어요. 메뉴에서 백업을 내보내 두세요.');
+    saver.failed = true;
+  }
+  saver.inflight.delete(path);
+  if (ok) { if (!saver.pending.size) saver.failed = false; if (saver.pending.has(path)) return writeOne(path); }
+  setStatus();
+}
+function setStatus() {
+  const el = $('#status');
+  const busy = saver.inflight.size || (saver.pending.size && !saver.failed);
+  el.classList.toggle('error', !busy && saver.failed);
+  el.disabled = busy || !saver.failed;
+  if (!S.ready) el.textContent = S.loadError ? '불러오지 못함' : '불러오는 중…';
+  else if (busy) el.textContent = '저장 중…';
+  else if (saver.failed) el.textContent = '저장 실패 · 다시 시도';
+  else el.textContent = { cloud: '계정에 저장됨', local: '이 브라우저에 저장됨', memory: '저장 안 됨 (임시)' }[backend.kind];
+  el.title = S.ready ? { cloud: 'Claude 계정에 저장돼요. 다른 기기에서 열어도 보여요.', local: '이 브라우저에만 저장돼요. 메뉴에서 백업을 내보낼 수 있어요.', memory: '브라우저 저장소를 쓸 수 없어 창을 닫으면 사라져요.' }[backend.kind] : '';
+}
+function touch(note) {
+  note.updated = Date.now();
+  const id = note.id;
+  queueSave(id, () => (S.notes.has(id) ? serializeNote(S.notes.get(id)) : null));
+  scheduleList();
+}
+const saveMeta = () => queueSave('meta', () => clone(S.meta), 300);
+
+/* ================= 알림 · 대화상자 ================= */
+let toastTimer = 0;
+function toast(msg, action) {
+  const el = $('#toast');
+  put(el, h('span', null, msg), action ? h('button', { type: 'button', onclick: () => { el.hidden = true; action.fn(); } }, action.label) : null);
+  el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, action ? 7000 : 3600);
+}
+function dialog({ title, body, actions, onClose }) {
+  const d = h('dialog', { class: 'dlg' });
+  const close = () => { if (d.open) d.close(); };
+  add(d, h('h2', null, title), body, h('div', { class: 'dlg-actions' }, actions.map((a) =>
+    h('button', { type: 'button', class: 'btn ' + (a.kind || ''), onclick: () => { if (a.fn && a.fn() === false) return; close(); } }, a.label))));
+  d.addEventListener('close', () => { d.remove(); if (onClose) onClose(); });
+  d.addEventListener('click', (e) => { if (e.target === d) close(); });
+  document.body.append(d);
+  d.showModal();
+  return { el: d, close };
+}
+async function saveFile(filename, text) {
+  const dl = await downloadsP;
+  if (dl) {
+    try { await dl.save({ filename, data: text }); toast('파일을 저장했어요.'); return; }
+    catch (e) { if (e && (e.code === 'declined' || e.code === 'rate_limited')) return; }
+  } else if (!inArtifact) {
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+    const a = h('a', { href: url, download: filename });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    return;
+  }
+  const ta = h('textarea', { readonly: true, 'aria-label': filename, value: text });
+  dialog({
+    title: '이 화면에서는 파일로 저장할 수 없어요',
+    body: h('div', null, h('p', null, `아래 내용을 복사해 ${filename} 파일로 붙여 넣으세요.`), ta),
+    actions: [
+      { label: '복사', kind: 'primary', fn: () => { const p = navigator.clipboard?.writeText(text); (p || Promise.reject()).then(() => toast('복사했어요.'), () => { ta.focus(); ta.select(); }); return false; } },
+      { label: '닫기' },
+    ],
+  });
+}
+
+/* ================= 목록 칸 ================= */
+function haystack(n) {
+  return [n.title, n.summary, n.tags.join(' '), subjectOf(n)?.name || '', ...n.rows.map((r) => r.cue + ' ' + r.body)].join('\n').toLowerCase();
+}
+function visibleNotes() {
+  const today = ymd();
+  const q = S.q.trim().toLowerCase();
+  let arr = [...S.notes.values()];
+  if (S.filter === 'due') arr = arr.filter((n) => isDue(n, today));
+  else if (S.filter !== 'all') arr = arr.filter((n) => n.subject === S.filter);
+  if (q) arr = arr.filter((n) => haystack(n).includes(q));
+  return arr.sort((a, b) => (b.pinned - a.pinned) || (b.updated - a.updated));
+}
+function renderChips() {
+  const all = [...S.notes.values()];
+  const today = ymd();
+  const dueN = all.filter((n) => isDue(n, today)).length;
+  if (S.filter !== 'all' && S.filter !== 'due' && !S.meta.subjects.some((s) => s.id === S.filter)) S.filter = 'all';
+  const chip = (key, kids) => h('button', { type: 'button', class: 'chip', 'aria-pressed': String(S.filter === key), onclick: () => { S.filter = key; renderChips(); renderList(); } }, kids);
+  put($('#chips'),
+    chip('all', ['전체 ', h('span', { class: 'n' }, all.length)]),
+    chip('due', ['오늘 복습 ', h('span', { class: dueN ? 'due-n' : 'n' }, dueN)]),
+    S.meta.subjects.map((s) => chip(s.id, [h('span', { class: 'dot', style: `background:var(--s${s.color % 6})` }), s.name, ' ', h('span', { class: 'n' }, all.filter((n) => n.subject === s.id).length)])),
+    h('button', { type: 'button', class: 'chip', onclick: openSubjects }, '+ 과목'),
+  );
+}
+let listTimer = 0;
+const scheduleList = () => { clearTimeout(listTimer); listTimer = setTimeout(() => { renderChips(); renderList(); }, 350); };
+function renderList() {
+  const root = $('#list');
+  if (!S.ready) {
+    root.replaceChildren(h('div', { class: 'list-note' }, S.loadError
+      ? [h('strong', null, '노트를 불러오지 못했어요'), h('p', null, '연결 상태를 확인하고 다시 시도해 주세요.'), h('div', { class: 'row-btns' }, h('button', { class: 'btn', type: 'button', onclick: boot }, '다시 시도'))]
+      : h('p', null, '노트를 불러오는 중…')));
+    return;
+  }
+  const arr = visibleNotes();
+  if (!arr.length) {
+    let kids;
+    if (!S.notes.size) kids = [h('strong', null, '아직 노트가 없어요'), h('p', null, '수업 내용을 적고, 단서만 보고 떠올리며 복습해 보세요.'),
+      h('div', { class: 'row-btns dup-cta' }, h('button', { class: 'btn primary', type: 'button', onclick: () => createNote() }, '첫 노트 만들기'), h('button', { class: 'btn', type: 'button', onclick: addSample }, '예시 노트 넣어 보기'))];
+    else if (S.q.trim()) kids = [h('strong', null, '찾는 노트가 없어요'), h('p', null, `"${S.q.trim()}"이(가) 들어간 노트가 없어요.`)];
+    else if (S.filter === 'due') kids = [h('strong', null, '오늘 복습할 노트는 다 봤어요'), h('p', null, '복습 날짜가 된 노트가 여기에 모여요.')];
+    else kids = [h('strong', null, '이 과목엔 아직 노트가 없어요'), h('div', { class: 'row-btns' }, h('button', { class: 'btn primary', type: 'button', onclick: () => createNote() }, '새 노트'))];
+    root.replaceChildren(h('div', { class: 'list-note' }, kids));
+    return;
+  }
+  const today = ymd();
+  root.replaceChildren(...arr.map((n) => {
+    const s = subjectOf(n);
+    const snippet = n.rows.map((r) => r.body.trim() || r.cue.trim()).filter(Boolean).join(' · ') || n.summary.trim() || (n.inkPages ? '손필기' : '내용 없음');
+    return h('button', { type: 'button', class: 'note-item', 'aria-current': String(n.id === S.currentId), onclick: () => selectNote(n.id) },
+      h('div', { class: 'ni-top' },
+        h('span', { class: 'dot', style: s ? `background:var(--s${s.color % 6})` : null }),
+        h('span', { class: 'subj' }, s ? s.name : '과목 없음'),
+        n.pinned && h('span', { class: 'pin-mark' }, '고정'),
+        h('span', { class: 'date' }, fmtDay(new Date(n.updated)))),
+      h('div', { class: 'ni-title' }, n.title.trim() || '제목 없는 노트'),
+      h('div', { class: 'ni-snippet' }, snippet),
+      h('div', { class: 'ni-foot' },
+        isDue(n, today) ? h('span', { class: 'tagchip' }, dueLabel(n)) : (hasContent(n) ? h('span', null, dueLabel(n)) : null),
+        hasContent(n) && h('span', null, `· ${n.stage}/${STEPS.length}단계`)));
+  }));
+}
+
+/* ================= 노트 만들기 · 고르기 · 지우기 ================= */
+function createNote(seed) {
+  const id = newId('n');
+  const subject = seed?.subject ?? (S.filter !== 'all' && S.filter !== 'due' ? S.filter : '');
+  const note = normalizeNote(id, { ...seed, subject, created: Date.now(), updated: Date.now(), due: addDays(ymd(), 1) });
+  S.notes.set(id, note);
+  if (S.filter === 'due') S.filter = 'all';
+  S.q = ''; $('#q').value = '';
+  S.tab = 'text';
+  touch(note);
+  renderChips();
+  selectNote(id);
+  if (!seed) $('#note-title')?.focus();
+  return note;
+}
+function addSample() {
+  let subj = S.meta.subjects.find((s) => s.name === '생명과학');
+  if (!subj) { subj = { id: newId('s'), name: '생명과학', color: 1 }; S.meta.subjects.push(subj); saveMeta(); }
+  createNote({
+    title: '[예시] 광합성 — 명반응과 암반응', subject: subj.id, tags: ['예시'],
+    rows: [
+      { cue: '광합성이란?', body: '빛에너지로 CO₂와 H₂O에서 포도당을 만드는 과정\n6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂' },
+      { cue: '명반응은 어디서?', body: '엽록체의 틸라코이드 막\n물이 분해되며 O₂ 방출, ATP와 NADPH 생성' },
+      { cue: '암반응(캘빈 회로)', body: '스트로마에서 진행\nATP·NADPH를 써서 CO₂를 당으로 고정' },
+      { cue: '두 반응은 어떻게 이어지나?', body: '명반응이 만든 ATP·NADPH가 암반응의 에너지원' },
+    ],
+    summary: '빛으로 만든 ATP·NADPH(명반응)로 CO₂를 당으로 바꾼다(암반응).',
+  });
+  toast('예시 노트를 넣었어요. 지워도 괜찮아요.');
+}
+function selectNote(id) {
+  S.currentId = id;
+  S.review = null;
+  $('#app').classList.add('show-editor');
+  renderList();
+  renderEditor();
+}
+function backToList() {
+  $('#app').classList.remove('show-editor');
+  S.review = null;
+  renderList();
+}
+function deleteNote(note) {
+  dialog({
+    title: '이 노트를 지울까요?',
+    body: h('p', null, `"${note.title.trim() || '제목 없는 노트'}"의 글과 손필기가 모두 지워지고, 되돌릴 수 없어요.`),
+    actions: [{ label: '취소' }, { label: '지우기', kind: 'danger', fn: () => {
+      S.notes.delete(note.id);
+      queueSave(note.id, () => null, 0);
+      for (let p = 0; p < note.inkPages; p++) queueSave(`${note.id}/ink/p${p}`, () => null, 0);
+      S.currentId = null;
+      $('#app').classList.remove('show-editor');
+      renderChips(); renderList();
+      if (wide()) { const first = visibleNotes()[0]; if (first) { S.currentId = first.id; renderList(); } }
+      renderEditor();
+      toast('노트를 지웠어요.');
+    } }],
+  });
+}
+
+/* ================= 편집 칸 ================= */
+function renderEditor() {
+  destroyPads();
+  const root = $('#editor');
+  const desk = h('div', { class: 'desk gutter' });
+  root.replaceChildren(desk);
+  if (!S.ready) { desk.append(h('div', { class: 'sheet' }, h('p', { class: 'note-msg' }, S.loadError ? '노트를 불러오지 못했어요.' : '노트를 불러오는 중…'))); return; }
+  const note = S.notes.get(S.currentId);
+  if (!note) { desk.append(...(S.notes.size ? [pickView()] : welcomeView())); return; }
+  if (S.review) { desk.append(...reviewView(note)); return; }
+  desk.append(toolbar(note));
+  if (S.tab === 'ink') inkView(note, desk);
+  else { const sheet = sheetView(note); desk.append(sheet); growAll(sheet); }
+}
+const backBtn = () => h('button', { type: 'button', class: 'btn quiet only-narrow', onclick: backToList }, '← 목록');
+function pickView() {
+  return h('div', { class: 'sheet' }, h('p', { class: 'note-msg' }, '왼쪽 목록에서 노트를 고르거나 새 노트를 만드세요.'));
+}
+function welcomeView() {
+  const row = (cue, body) => h('div', { class: 'row' }, h('div', { class: 'cue static-cell' }, cue), h('div', { class: 'static-cell' }, body));
+  return [
+    h('div', { class: 'bar' }, backBtn()),
+    h('div', { class: 'sheet' },
+      h('div', { class: 'sheet-head' }, h('h2', { class: 'title' }, '적고, 가리고, 떠올리기'),
+        h('p', { class: 'meta' }, '밑줄은 코넬식 필기법으로 적고, 잊기 전에 다시 보게 해 주는 학습 노트예요.')),
+      h('div', { class: 'cols' }, h('span', null, '단서 · 질문'), h('span', null, '필기')),
+      row('오른쪽 칸', '수업을 들으며 내용을 적어요. 글로 적기 어려운 그림과 수식은 손필기 쪽에 그려요.'),
+      row('왼쪽 칸', '수업이 끝나면 핵심어나 질문을 한 줄씩 붙여요. 이 칸이 복습할 때 문제가 돼요.'),
+      row('복습하기', '필기를 가리고 단서만 보고 답을 떠올려요. 다 맞히면 다음 복습이 1 → 3 → 7 → 14 → 30일로 멀어져요.'),
+      h('div', { class: 'summary' }, h('label', null, '요약'), h('div', { class: 'static-cell' }, '맨 아래에는 노트 전체를 한두 문장으로 줄여 적어요.'))),
+    h('div', { class: 'bar' },
+      h('button', { class: 'btn primary', type: 'button', onclick: () => createNote() }, '첫 노트 만들기'),
+      h('button', { class: 'btn', type: 'button', onclick: addSample }, '예시 노트 넣어 보기')),
+  ];
+}
+function toolbar(note) {
+  const tab = (key, label) => h('button', { type: 'button', role: 'tab', 'aria-selected': String(S.tab === key), onclick: () => { if (S.tab !== key) { S.tab = key; renderEditor(); } } }, label);
+  return h('div', { class: 'bar' },
+    backBtn(),
+    h('div', { class: 'tabs', role: 'tablist', 'aria-label': '필기 방식' }, tab('text', '글 필기'), tab('ink', '손필기')),
+    h('span', { class: 'spacer' }),
+    h('button', { type: 'button', class: 'btn primary', onclick: () => startReview(note) }, '복습하기'),
+    h('button', { type: 'button', class: 'btn', 'aria-pressed': String(note.pinned), onclick: (e) => { note.pinned = !note.pinned; e.currentTarget.setAttribute('aria-pressed', String(note.pinned)); touch(note); } }, '고정'),
+    h('button', { type: 'button', class: 'btn', onclick: () => exportMarkdown(note) }, '.md 저장'),
+    h('button', { type: 'button', class: 'btn danger', onclick: () => deleteNote(note) }, '삭제'));
+}
+function growRow(el) {
+  const ts = el.querySelectorAll('textarea');
+  let max = 0;
+  ts.forEach((t) => { t.style.height = 'auto'; });
+  ts.forEach((t) => { max = Math.max(max, t.scrollHeight); });
+  ts.forEach((t) => { t.style.height = max + 'px'; });
+}
+const growAll = (root) => root.querySelectorAll('.row, .summary').forEach(growRow);
+function sheetView(note) {
+  const subj = h('select', { id: 'note-subject', 'aria-label': '과목', onchange: (e) => { note.subject = e.target.value; touch(note); } },
+    h('option', { value: '' }, '과목 없음'), S.meta.subjects.map((s) => h('option', { value: s.id }, s.name)));
+  subj.value = subjectOf(note) ? note.subject : '';
+  const rowsEl = h('div', { class: 'rows' });
+  const makeRow = (row) => {
+    const el = h('div', { class: 'row' });
+    const onKey = (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        const fresh = { cue: '', body: '' };
+        note.rows.splice(note.rows.indexOf(row) + 1, 0, fresh);
+        const freshEl = makeRow(fresh);
+        el.after(freshEl); growRow(freshEl); freshEl.querySelector('.cue').focus();
+        touch(note);
+      }
+    };
+    const cue = h('textarea', { class: 'cue', rows: 1, placeholder: '단서 · 질문', 'aria-label': '단서 또는 질문', value: row.cue, onkeydown: onKey,
+      oninput: (e) => { row.cue = e.target.value; growRow(el); touch(note); } });
+    const body = h('textarea', { class: 'body', rows: 2, placeholder: '필기', 'aria-label': '필기', value: row.body, onkeydown: onKey,
+      oninput: (e) => { row.body = e.target.value; growRow(el); touch(note); } });
+    const del = h('button', { type: 'button', class: 'row-del', 'aria-label': '이 줄 지우기', title: '이 줄 지우기', onclick: () => {
+      if (note.rows.length === 1) { row.cue = ''; row.body = ''; cue.value = ''; body.value = ''; growRow(el); }
+      else { note.rows.splice(note.rows.indexOf(row), 1); el.remove(); }
+      touch(note);
+    } }, '×');
+    el.append(cue, body, del);
+    return el;
+  };
+  rowsEl.append(...note.rows.map(makeRow));
+  const summaryEl = h('div', { class: 'summary' },
+    h('label', { for: 'note-summary' }, '요약'),
+    h('textarea', { id: 'note-summary', rows: 2, placeholder: '이 노트를 한두 문장으로 줄이면?', value: note.summary,
+      oninput: (e) => { note.summary = e.target.value; growRow(summaryEl); touch(note); } }));
+  const sheet = h('div', { class: 'sheet' },
+    h('div', { class: 'sheet-head' },
+      h('input', { id: 'note-title', class: 'title', type: 'text', placeholder: '제목을 적으세요', 'aria-label': '제목', maxlength: 200, value: note.title,
+        oninput: (e) => { note.title = e.target.value; touch(note); } }),
+      h('div', { class: 'meta' }, subj,
+        h('span', { class: 'when' }, `${fmtDay(new Date(note.created))} 작성 · ${dueLabel(note)} · ${note.stage}/${STEPS.length}단계`),
+        h('input', { id: 'note-tags', type: 'text', placeholder: '태그 (쉼표로 구분)', 'aria-label': '태그', value: note.tags.join(', '),
+          oninput: (e) => { note.tags = e.target.value.split(',').map((t) => t.trim()).filter(Boolean); touch(note); } }))),
+    h('div', { class: 'cols' }, h('span', null, '단서 · 질문'), h('span', null, '필기')),
+    rowsEl,
+    h('div', { class: 'add-line' }, h('span'), h('div', null,
+      h('button', { type: 'button', onclick: () => {
+        const fresh = { cue: '', body: '' };
+        note.rows.push(fresh);
+        const el = makeRow(fresh);
+        rowsEl.append(el); growRow(el); el.querySelector('.cue').focus();
+        touch(note);
+      } }, '+ 줄 추가'),
+      h('span', { class: 'hint' }, 'Ctrl+Enter로도 추가'))),
+    summaryEl);
+  if (window.ResizeObserver) {
+    let w = 0;
+    const ro = new ResizeObserver(() => { if (!sheet.isConnected) { ro.disconnect(); return; } if (sheet.clientWidth !== w) { w = sheet.clientWidth; growAll(sheet); } });
+    ro.observe(sheet);
+  }
+  return sheet;
+}
+
+/* ================= 손필기 ================= */
+const INK_W = 1000, INK_H = 1414, INK_LIMIT = 220 * 1024;   // 문서 하나의 한도(256KiB)보다 조금 작게
+const encodeStroke = (s) => { const p = s.p, d = [p[0], p[1]]; for (let i = 2; i < p.length; i++) d.push(p[i] - p[i - 2]); return { t: s.t, c: s.c, w: s.w, d }; };
+const decodeStroke = (s) => { const d = Array.isArray(s.d) ? s.d : [], p = d.slice(0, 2); for (let i = 2; i < d.length; i++) p.push(p[i - 2] + d[i]); return { t: s.t ? 1 : 0, c: Number(s.c) || 0, w: Number(s.w) || 3.5, p }; };
+function inkColors() { return { pen: [cssVar('--ink0'), cssVar('--ink1'), cssVar('--ink2')], hl: cssVar('--inkhl'), rule: cssVar('--rule') }; }
+function paintStroke(ctx, s, k, colors) {
+  const p = s.p;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.lineWidth = s.w * k;
+  ctx.strokeStyle = ctx.fillStyle = s.t ? colors.hl : colors.pen[s.c] || colors.pen[0];
+  ctx.beginPath();
+  if (p.length < 4) { ctx.arc(p[0] * k, p[1] * k, (s.w * k) / 2, 0, Math.PI * 2); ctx.fill(); return; }
+  ctx.moveTo(p[0] * k, p[1] * k);
+  for (let i = 2; i < p.length - 2; i += 2) ctx.quadraticCurveTo(p[i] * k, p[i + 1] * k, ((p[i] + p[i + 2]) / 2) * k, ((p[i + 1] + p[i + 3]) / 2) * k);
+  ctx.lineTo(p[p.length - 2] * k, p[p.length - 1] * k);
+  ctx.stroke();
+}
+function segDist(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
+  const t = len ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len)) : 0;
+  return Math.hypot(px - ax - t * dx, py - ay - t * dy);
+}
+class InkPad {
+  constructor(note, page) {
+    this.note = note; this.page = page; this.path = `${note.id}/ink/p${page}`;
+    this.strokes = []; this.undo = []; this.loaded = false; this.full = false; this.cur = null; this.erased = null; this.pid = null; this.k = 1;
+    this.base = h('canvas', { class: 'ink-base' });
+    this.live = h('canvas', { class: 'ink-live', 'aria-label': `손필기 ${page + 1}쪽` });
+    this.el = h('div', { class: 'ink-page' }, this.base, this.live, h('span', { class: 'ink-no' }, `${page + 1}쪽`));
+    this.live.addEventListener('pointerdown', (e) => this.down(e));
+    this.live.addEventListener('pointermove', (e) => this.move(e));
+    this.live.addEventListener('pointerup', (e) => this.up(e));
+    this.live.addEventListener('pointercancel', (e) => this.up(e));
+    this.ro = new ResizeObserver(() => this.resize());
+    this.ro.observe(this.el);
+    this.load();
+  }
+  async load() {
+    try {
+      const pending = saver.pending.get(this.path);
+      const doc = pending ? pending() : await backend.get(this.path);
+      this.strokes = Array.isArray(doc?.strokes) ? doc.strokes.map(decodeStroke).filter((s) => s.p.length >= 2) : [];
+      this.loaded = true;
+      this.redraw();
+    } catch { toast('손필기를 불러오지 못했어요.'); }
+  }
+  destroy() { this.ro.disconnect(); }
+  resize() {
+    const w = this.el.clientWidth;
+    if (!w) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const cw = Math.round(w * dpr), ch = Math.round((w * INK_H / INK_W) * dpr);
+    if (this.base.width === cw && this.base.height === ch) return;
+    for (const c of [this.base, this.live]) { c.width = cw; c.height = ch; }
+    this.k = cw / INK_W;
+    this.redraw();
+  }
+  redraw() {
+    const ctx = this.base.getContext('2d'), colors = inkColors(), k = this.k;
+    ctx.clearRect(0, 0, this.base.width, this.base.height);
+    ctx.strokeStyle = colors.rule; ctx.lineWidth = Math.max(1, k);
+    ctx.beginPath();
+    for (let y = 90; y < INK_H - 20; y += 44) { ctx.moveTo(0, Math.round(y * k) + .5); ctx.lineTo(this.base.width, Math.round(y * k) + .5); }
+    ctx.stroke();
+    for (const s of this.strokes) if (s.t) paintStroke(ctx, s, k, colors);     // 형광펜은 글씨 아래에
+    for (const s of this.strokes) if (!s.t) paintStroke(ctx, s, k, colors);
+  }
+  point(e) {
+    const r = this.live.getBoundingClientRect();
+    return [Math.round(((e.clientX - r.left) / r.width) * INK_W), Math.round(((e.clientY - r.top) / r.height) * INK_H)];
+  }
+  down(e) {
+    const tool = S.ink.tool;
+    if (tool === 'move' || !this.loaded || this.pid != null || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    e.preventDefault();
+    const [x, y] = this.point(e);
+    if (tool === 'erase') { this.erased = []; this.eraseAt(x, y); }
+    else {
+      if (this.full) { toast('이 쪽은 가득 찼어요. 쪽을 추가해 이어서 쓰세요.'); return; }
+      this.cur = { t: tool === 'hl' ? 1 : 0, c: S.ink.color, w: tool === 'hl' ? 24 : S.ink.width, p: [x, y] };
+      this.drawLive();
+    }
+    this.pid = e.pointerId;
+    try { this.live.setPointerCapture(e.pointerId); } catch { /* 일부 브라우저는 캡처를 거절한다 */ }
+  }
+  move(e) {
+    if (e.pointerId !== this.pid) return;
+    const evs = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
+    for (const ev of evs.length ? evs : [e]) {
+      const [x, y] = this.point(ev);
+      if (this.erased) { this.eraseAt(x, y); continue; }
+      const p = this.cur.p;
+      if (Math.hypot(x - p[p.length - 2], y - p[p.length - 1]) >= 2) p.push(x, y);
+    }
+    if (this.cur) this.drawLive();
+  }
+  up(e) {
+    if (e.pointerId !== this.pid) return;
+    this.pid = null;
+    if (this.cur) {
+      const s = this.cur; this.cur = null;
+      this.strokes.push(s); this.undo.push({ add: s }); inkOrder.push(this);
+      this.live.getContext('2d').clearRect(0, 0, this.live.width, this.live.height);
+      if (s.t) this.redraw(); else paintStroke(this.base.getContext('2d'), s, this.k, inkColors());
+      this.dirty();
+    } else if (this.erased) {
+      if (this.erased.length) { this.undo.push({ del: this.erased }); inkOrder.push(this); this.dirty(); }
+      this.erased = null;
+    }
+  }
+  drawLive() {
+    const ctx = this.live.getContext('2d');
+    ctx.clearRect(0, 0, this.live.width, this.live.height);
+    paintStroke(ctx, this.cur, this.k, inkColors());
+  }
+  eraseAt(x, y) {
+    const hit = this.strokes.filter((s) => {
+      const p = s.p, r = 14 + s.w / 2;
+      if (p.length < 4) return Math.hypot(x - p[0], y - p[1]) <= r;
+      for (let i = 0; i < p.length - 2; i += 2) if (segDist(x, y, p[i], p[i + 1], p[i + 2], p[i + 3]) <= r) return true;
+      return false;
+    });
+    if (!hit.length) return;
+    this.strokes = this.strokes.filter((s) => !hit.includes(s));
+    this.erased.push(...hit);
+    this.redraw();
+  }
+  undoOne() {
+    const a = this.undo.pop();
+    if (!a) return;
+    if (a.add) this.strokes = this.strokes.filter((s) => s !== a.add); else this.strokes.push(...a.del);
+    this.redraw(); this.dirty();
+  }
+  clear() {
+    if (!this.strokes.length) return;
+    this.undo.push({ del: this.strokes }); inkOrder.push(this);
+    this.strokes = [];
+    this.redraw(); this.dirty();
+  }
+  dirty() {
+    if (this.page + 1 > this.note.inkPages) this.note.inkPages = this.page + 1;
+    touch(this.note);
+    queueSave(this.path, () => {
+      if (!S.notes.has(this.note.id)) return null;
+      const doc = { kind: 'ink', updated: Date.now(), strokes: this.strokes.map(encodeStroke) };
+      this.full = JSON.stringify(doc).length > INK_LIMIT;
+      return doc;
+    }, 1200);
+  }
+}
+function destroyPads() { pads.forEach((p) => p.destroy()); pads = []; inkOrder = []; }
+function inkView(note, desk) {
+  const pagesEl = h('div', { style: 'display:grid;gap:14px' });
+  const addPad = () => { const pad = new InkPad(note, pads.length); pads.push(pad); pagesEl.append(pad.el); return pad; };
+  const wrap = h('div', { style: 'display:grid;gap:12px' });
+  const bar = h('div', { class: 'bar ink-bar', role: 'toolbar', 'aria-label': '손필기 도구' });
+  const paintBar = () => {
+    const I = S.ink;
+    wrap.classList.toggle('tool-move', I.tool === 'move');
+    const tool = (key, label) => h('button', { type: 'button', class: 'btn', 'aria-pressed': String(I.tool === key), onclick: () => { I.tool = key; paintBar(); } }, label);
+    const sw = (i, name) => h('button', { type: 'button', class: 'swatch', 'aria-label': `펜 색 ${name}`, title: name, 'aria-pressed': String(I.tool === 'pen' && I.color === i),
+      onclick: () => { I.tool = 'pen'; I.color = i; paintBar(); } }, h('i', { style: `background:var(--ink${i})` }));
+    const widths = [[2, '가늘게'], [3.5, '보통'], [6, '굵게']];
+    const wi = Math.max(0, widths.findIndex((w) => w[0] === I.width));
+    put(bar,
+      tool('pen', '펜'), sw(0, '기본'), sw(1, '파랑'), sw(2, '빨강'),
+      h('button', { type: 'button', class: 'btn', title: '펜 굵기 바꾸기', onclick: () => { I.width = widths[(wi + 1) % widths.length][0]; paintBar(); } }, `굵기: ${widths[wi][1]}`),
+      h('span', { class: 'sep' }),
+      tool('hl', '형광펜'), tool('erase', '지우개'), tool('move', '이동'),
+      h('span', { class: 'spacer' }),
+      h('button', { type: 'button', class: 'btn', onclick: () => { const pad = inkOrder.pop(); if (pad) pad.undoOne(); else toast('되돌릴 획이 없어요.'); } }, '되돌리기'),
+      h('button', { type: 'button', class: 'btn', onclick: () => { const pad = addPad(); pad.el.scrollIntoView({ block: 'start', behavior: 'smooth' }); } }, '쪽 추가'),
+      h('button', { type: 'button', class: 'btn danger', onclick: () => {
+        const filled = pads.filter((p) => p.strokes.length);
+        if (!filled.length) { toast('지울 손필기가 없어요.'); return; }
+        const last = filled[filled.length - 1];
+        last.clear();
+        toast(`${last.page + 1}쪽을 비웠어요.`, { label: '되돌리기', fn: () => { const i = inkOrder.lastIndexOf(last); if (i >= 0) inkOrder.splice(i, 1); last.undoOne(); } });
+      } }, '쪽 비우기'));
+  };
+  paintBar();
+  wrap.append(bar, pagesEl);
+  desk.append(wrap);
+  for (let i = 0; i < Math.max(1, note.inkPages); i++) addPad();
+}
+const repaintInk = () => pads.forEach((p) => p.redraw());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', repaintInk);
+new MutationObserver(repaintInk).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+/* ================= 복습 ================= */
+function cardsOf(note) {
+  const cs = note.rows.filter((r) => r.cue.trim() && r.body.trim()).map((r) => ({ q: r.cue.trim(), a: r.body.trim() }));
+  if (note.summary.trim()) cs.push({ q: '이 노트를 한두 문장으로 줄이면?', a: note.summary.trim() });
+  return cs;
+}
+function startReview(note) {
+  flush();
+  S.review = { cards: cardsOf(note), i: 0, shown: false, missed: [], scored: true, done: false, total: 0 };
+  S.review.total = S.review.cards.length;
+  renderEditor();
+}
+function finishReview(note, perfect) {
+  const R = S.review;
+  if (R.scored) {
+    note.stage = perfect ? Math.min(note.stage + 1, STEPS.length) : 0;
+    note.due = addDays(ymd(), STEPS[Math.min(note.stage, STEPS.length - 1)]);
+    note.lastReview = Date.now();
+    const id = note.id;
+    queueSave(id, () => (S.notes.has(id) ? serializeNote(S.notes.get(id)) : null), 0);   // 복습 기록은 '수정한 날'을 바꾸지 않는다
+    renderChips(); renderList();
+  }
+  R.done = true; R.perfect = perfect;
+  renderEditor();
+}
+function reviewView(note) {
+  const R = S.review;
+  const exit = () => { S.review = null; renderEditor(); };
+  const head = h('div', { class: 'bar' }, backBtn(), h('strong', null, `복습 · ${note.title.trim() || '제목 없는 노트'}`), h('span', { class: 'spacer' }), h('button', { type: 'button', class: 'btn', onclick: exit }, '그만하기'));
+  const box = h('div', { class: 'review' });
+  if (R.done) {
+    const gap = dayDiff(ymd(), note.due);
+    add(box,
+      h('p', { class: 'result-big' }, R.total ? `${R.total}개 중 ${R.total - R.missed.length}개를 떠올렸어요` : '한 번 읽었어요'),
+      R.scored
+        ? h('p', null, R.perfect ? `다음 복습은 ${gap}일 뒤, ${fmtDay(parseYmd(note.due))}이에요.` : '헷갈린 내용이 있어 내일 다시 볼게요.')
+        : h('p', null, '연습으로 다시 본 것은 복습 일정에 넣지 않았어요.'),
+      h('ol', { class: 'steps', 'aria-label': '복습 간격' }, STEPS.map((d, i) => h('li', { class: i === Math.min(note.stage, STEPS.length - 1) ? 'on' : null }, `${d}일`))),
+      h('div', { class: 'bar' },
+        R.missed.length ? h('button', { type: 'button', class: 'btn primary', onclick: () => { S.review = { cards: R.missed, i: 0, shown: false, missed: [], scored: false, done: false, total: R.missed.length }; renderEditor(); } }, '헷갈린 것만 다시') : null,
+        h('button', { type: 'button', class: R.missed.length ? 'btn' : 'btn primary', onclick: exit }, '노트로 돌아가기')));
+    return [head, box];
+  }
+  if (!R.cards.length) {
+    add(box,
+      h('p', null, '단서와 필기가 함께 적힌 줄이 없어서, 문제 대신 노트를 통째로 보여 드려요. 단서 칸을 채우면 가리고 떠올리기로 복습할 수 있어요.'),
+      note.rows.filter((r) => r.cue.trim() || r.body.trim()).map((r) => h('div', { class: 'a' }, [r.cue.trim(), r.body.trim()].filter(Boolean).join('\n'))),
+      note.inkPages ? h('p', { class: 'count' }, `손필기 ${note.inkPages}쪽은 노트의 손필기 탭에서 볼 수 있어요.`) : null,
+      h('div', { class: 'bar' }, h('button', { type: 'button', class: 'btn primary', onclick: () => finishReview(note, true) }, '다 읽었어요')));
+    return [head, box];
+  }
+  const card = R.cards[R.i];
+  const answer = (known) => {
+    if (!known) R.missed.push(card);
+    R.i++; R.shown = false;
+    if (R.i >= R.cards.length) finishReview(note, R.missed.length === 0); else renderEditor();
+  };
+  add(box,
+    h('div', { class: 'progress', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': R.cards.length, 'aria-valuenow': R.i }, h('i', { style: `width:${(R.i / R.cards.length) * 100}%` })),
+    h('p', { class: 'count' }, `${R.i + 1} / ${R.cards.length}`),
+    h('p', { class: 'q' }, card.q),
+    R.shown ? h('div', { class: 'a' }, card.a) : h('div', { class: 'a veil' }, '필기를 가려 두었어요. 먼저 머릿속으로 답해 보세요.'),
+    R.shown
+      ? h('div', { class: 'bar' },
+          h('button', { type: 'button', class: 'btn', id: 'rv-miss', onclick: () => answer(false) }, '헷갈려요'),
+          h('button', { type: 'button', class: 'btn primary', id: 'rv-ok', onclick: () => answer(true) }, '떠올렸어요'),
+          h('span', { class: 'kbd' }, '키보드: 1 헷갈려요 · 2 떠올렸어요'))
+      : h('div', { class: 'bar' },
+          h('button', { type: 'button', class: 'btn primary', id: 'rv-show', onclick: () => { R.shown = true; renderEditor(); } }, '필기 보기'),
+          h('span', { class: 'kbd' }, '키보드: 스페이스')));
+  return [head, box];
+}
+document.addEventListener('keydown', (e) => {
+  if (!S.review || S.review.done || e.target.closest('input, textarea, select, dialog') || e.ctrlKey || e.metaKey || e.altKey) return;
+  const press = (id) => { const b = document.getElementById(id); if (b) { e.preventDefault(); b.click(); } };
+  if (e.key === ' ') press('rv-show');
+  else if (e.key === '1') press('rv-miss');
+  else if (e.key === '2') press('rv-ok');
+});
+
+/* ================= 과목 · 백업 ================= */
+function openSubjects() {
+  const listEl = h('div');
+  const paint = () => put(listEl,
+    S.meta.subjects.length ? null : h('p', null, '과목을 만들면 노트를 과목별로 모아 볼 수 있어요.'),
+    S.meta.subjects.map((s) => h('div', { class: 'subj-row' },
+      h('button', { type: 'button', class: 'swatch', 'aria-label': '색 바꾸기', title: '색 바꾸기', onclick: () => { s.color = (s.color + 1) % 6; saveMeta(); paint(); } }, h('i', { style: `background:var(--s${s.color % 6})` })),
+      h('input', { type: 'text', value: s.name, maxlength: 30, 'aria-label': '과목 이름', oninput: (e) => { s.name = e.target.value.trim() || '이름 없는 과목'; saveMeta(); } }),
+      h('button', { type: 'button', class: 'btn danger', onclick: () => { S.meta.subjects = S.meta.subjects.filter((x) => x !== s); saveMeta(); paint(); } }, '삭제'))));
+  paint();
+  const input = h('input', { type: 'text', placeholder: '새 과목 이름 (예: 한국사)', maxlength: 30, 'aria-label': '새 과목 이름' });
+  const add = () => {
+    const name = input.value.trim();
+    if (!name) { input.focus(); return; }
+    S.meta.subjects.push({ id: newId('s'), name, color: S.meta.subjects.length % 6 });
+    input.value = ''; saveMeta(); paint(); input.focus();
+  };
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); add(); } });
+  dialog({
+    title: '과목 관리',
+    body: h('div', null, listEl, h('div', { class: 'subj-row' }, input, h('button', { type: 'button', class: 'btn', onclick: add }, '추가')),
+      h('p', { style: 'margin-top:10px;font-size:13px' }, '과목을 삭제해도 노트는 지워지지 않고 "과목 없음"으로 남아요.')),
+    actions: [{ label: '완료', kind: 'primary' }],
+    onClose: () => { renderChips(); renderList(); if (!S.review && S.tab === 'text') renderEditor(); },
+  });
+}
+function exportMarkdown(note) {
+  const s = subjectOf(note);
+  const lines = [`# ${note.title.trim() || '제목 없는 노트'}`, '',
+    `- 과목: ${s ? s.name : '없음'}`, `- 작성: ${ymd(new Date(note.created))}`, note.tags.length ? `- 태그: ${note.tags.join(', ')}` : null, '', '## 필기', ''];
+  for (const r of note.rows) {
+    if (!r.cue.trim() && !r.body.trim()) continue;
+    if (r.cue.trim()) lines.push(`**${r.cue.trim().replace(/\n+/g, ' ')}**`, '');
+    if (r.body.trim()) lines.push(r.body.trim(), '');
+  }
+  if (note.summary.trim()) lines.push('## 요약', '', note.summary.trim(), '');
+  if (note.inkPages) lines.push(`> 손필기 ${note.inkPages}쪽은 이 파일에 들어가지 않아요. 백업(.json)에는 포함돼요.`, '');
+  const name = (note.title.trim() || '노트').replace(/[\\/:*?"<>|\n]+/g, ' ').slice(0, 60).trim() || '노트';
+  saveFile(`${name}.md`, lines.filter((l) => l != null).join('\n'));
+}
+async function exportBackup() {
+  flush();
+  const ink = {};
+  try {
+    for (const n of S.notes.values()) for (let p = 0; p < n.inkPages; p++) {
+      const path = `${n.id}/ink/p${p}`;
+      const pending = saver.pending.get(path);
+      const doc = pending ? pending() : await backend.get(path);
+      if (doc) ink[path] = doc;
+    }
+  } catch { toast('손필기를 읽지 못해 백업을 멈췄어요. 다시 시도해 주세요.'); return; }
+  const data = { app: 'miljul', version: 1, exported: new Date().toISOString(), meta: S.meta, notes: [...S.notes.values()].map((n) => ({ id: n.id, ...serializeNote(n) })), ink };
+  saveFile(`miljul-backup-${ymd()}.json`, JSON.stringify(data));
+}
+async function importBackup(file) {
+  let data;
+  try { data = JSON.parse(await file.text()); } catch { data = null; }
+  if (!data || data.app !== 'miljul' || !Array.isArray(data.notes)) { toast('밑줄 백업 파일이 아니에요. .json 백업 파일을 골라 주세요.'); return; }
+  for (const s of data.meta?.subjects || []) {
+    if (s && s.id && !S.meta.subjects.some((x) => x.id === s.id)) S.meta.subjects.push({ id: String(s.id), name: String(s.name || '이름 없는 과목'), color: Number(s.color) || 0 });
+  }
+  saveMeta();
+  const valid = /^[A-Za-z0-9_-]{1,60}$/;
+  let count = 0;
+  for (const raw of data.notes) {
+    if (!raw || !valid.test(raw.id)) continue;
+    const note = normalizeNote(raw.id, raw);
+    S.notes.set(note.id, note);
+    queueSave(note.id, () => (S.notes.has(note.id) ? serializeNote(S.notes.get(note.id)) : null));
+    count++;
+  }
+  for (const [path, doc] of Object.entries(data.ink || {})) {
+    const m = /^([A-Za-z0-9_-]{1,60})\/ink\/p\d{1,3}$/.exec(path);
+    if (m && S.notes.has(m[1]) && doc && Array.isArray(doc.strokes)) queueSave(path, () => doc);
+  }
+  renderChips(); renderList(); renderEditor();
+  toast(`노트 ${count}개를 가져왔어요. 같은 노트는 백업 내용으로 덮어썼어요.`);
+}
+
+/* ================= 이벤트 · 시작 ================= */
+$('#new-note').addEventListener('click', () => { if (S.ready) createNote(); });
+$('#q').addEventListener('input', (e) => { S.q = e.target.value; renderList(); });
+$('#status').addEventListener('click', () => { saver.failed = false; flush(); });
+const menu = $('#menu'), menuBtn = $('#menu-btn');
+const closeMenu = () => { menu.hidden = true; menuBtn.setAttribute('aria-expanded', 'false'); };
+menuBtn.addEventListener('click', (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; menuBtn.setAttribute('aria-expanded', String(!menu.hidden)); });
+document.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e.target)) closeMenu(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+menu.addEventListener('click', (e) => {
+  const act = e.target.closest('button')?.dataset.act;
+  if (!act) return;
+  closeMenu();
+  if (!S.ready) return;
+  if (act === 'subjects') openSubjects();
+  else if (act === 'export') exportBackup();
+  else if (act === 'import') $('#import-file').click();
+});
+$('#import-file').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f && S.ready) importBackup(f); });
+addEventListener('pagehide', flush);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+document.fonts?.ready.then(() => { const sheet = $('#editor .sheet'); if (sheet) growAll(sheet); });
+
+let booting = false;
+async function boot() {
+  if (booting) return;
+  booting = true;
+  S.loadError = false;
+  setStatus(); renderList(); renderEditor();
+  try {
+    backend = backend || await pickBackend();
+    const { meta, notes } = await Promise.race([backend.loadAll(), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
+    if (meta && Array.isArray(meta.subjects)) S.meta.subjects = meta.subjects.filter((s) => s && s.id).map((s) => ({ id: String(s.id), name: String(s.name || '이름 없는 과목'), color: Number(s.color) || 0 }));
+    S.notes = new Map(notes.map(({ id, data }) => [id, normalizeNote(id, data)]));
+    S.ready = true;
+  } catch { S.loadError = true; }
+  booting = false;
+  setStatus(); renderChips();
+  if (S.ready && wide()) { const first = visibleNotes()[0]; if (first) S.currentId = first.id; }
+  renderList(); renderEditor();
+}
+boot();
+})();
+</script>
+</body>
+</html>

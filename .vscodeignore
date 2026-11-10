@@ -43,3 +43,5 @@ preview.html
 # Nested duplicate copies (user dragged folders into multiple paths)
 assets/pixel/characters/Modern_Office_Revamped_v1/**
 assets/pixel/characters/moderninteriors-win/**
+# 학습 노트 웹 앱은 확장 프로그램 패키지에 넣지 않는다.
+apps/**
