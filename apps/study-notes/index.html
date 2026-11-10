@@ -7,8 +7,9 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
 <style>
-/* Layout: 왼쪽은 노트 서랍(검색·과목·목록), 오른쪽은 책상 위에 놓인 코넬 노트 한 장.
-   라이트 테마는 줄 노트, 다크 테마는 칠판. 빨간 여백선이 단서 칸과 필기 칸을 가른다. */
+/* Layout: 왼쪽은 노트 서랍(검색·과목·목록), 오른쪽은 책상 위에 놓인 노트 한 장.
+   노트는 제목 → 대주제 → (소주제 | 내용 필기) → 미션 순서로 내려간다.
+   라이트 테마는 줄 노트, 다크 테마는 칠판. 빨간 여백선이 소주제 칸과 내용 필기 칸을 가른다. */
 :root {
   --bg: #e9edf4; --pane: #f4f6fa; --paper: #fefefc;
   --fg: #1b2233; --muted: #566076; --faint: #8a94a8;
@@ -77,7 +78,8 @@ h2, h3 { text-wrap: balance; }
   .list-note .row-btns.dup-cta { display: flex; }
   .title { font-size: 25px; }
   .cols, .row, .add-line { grid-template-columns: minmax(92px, 34%) minmax(0, 1fr); }
-  .row > .cue { font-size: 17px; }
+  .row > .sub { font-size: 17px; }
+  .sec-title { font-size: 21px; }
   .sheet textarea, .static-cell, .cols > *, .add-line > * { padding-left: 9px; padding-right: 9px; }
   .row > .body { padding-right: 30px; }
 }
@@ -159,7 +161,7 @@ h2, h3 { text-wrap: balance; }
 .cols, .row, .add-line { display: grid; grid-template-columns: minmax(92px, 30%) minmax(0, 1fr); }
 .cols > *, .add-line > * { padding: 5px 12px; }
 .cols { font-size: 12px; letter-spacing: .08em; color: var(--muted); border-bottom: 1px solid var(--rule); }
-.cols > :first-child, .add-line > :first-child, .row > .cue { border-right: 1.5px solid var(--margin); }
+.cols > :first-child, .add-line > :first-child, .row > .sub { border-right: 1.5px solid var(--margin); }
 .row { position: relative; border-bottom: 1px solid var(--line); }
 .sheet textarea {
   display: block; width: 100%; margin: 0; padding: 0 12px; border: 0; border-radius: 0; resize: none; overflow: hidden;
@@ -167,7 +169,7 @@ h2, h3 { text-wrap: balance; }
   line-height: var(--lh); min-height: var(--lh); overflow-wrap: anywhere;
 }
 .sheet textarea:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--accent-soft); }
-.row > .cue { font: 700 19px/var(--lh) var(--font-hand); letter-spacing: -.04em; color: var(--accent); }
+.row > .sub { font: 700 19px/var(--lh) var(--font-hand); letter-spacing: -.04em; color: var(--accent); }
 .row > .body { padding-right: 36px; }
 .row-del {
   position: absolute; right: 4px; top: 2px; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 6px;
@@ -175,10 +177,24 @@ h2, h3 { text-wrap: balance; }
 }
 .row:hover .row-del, .row:focus-within .row-del { opacity: 1; }
 .row-del:hover { color: var(--danger); background: var(--accent-soft); }
-.add-line button { justify-self: start; border: 0; background: transparent; color: var(--accent); padding: 4px 0; min-height: 32px; }
 .add-line .hint { font-size: 12px; color: var(--faint); margin-left: 10px; }
-.summary { border-top: 1.5px solid var(--margin); }
-.summary label { display: block; padding: 8px 12px 0; font-size: 12px; letter-spacing: .08em; color: var(--muted); }
+.sec-head { display: flex; align-items: center; gap: 10px; padding: 10px 8px 8px 12px; background: var(--pane); border-top: 1.5px solid var(--fg); border-bottom: 1px solid var(--line); }
+.sec:first-child .sec-head { border-top: 0; }
+.sec-no { flex: none; font-size: 12px; letter-spacing: .06em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sec-title { flex: 1; min-width: 0; padding: 0; border: 0; background: transparent; font: 700 23px/1.3 var(--font-hand); letter-spacing: -.04em; }
+.sec-title::placeholder, .mis input::placeholder { color: var(--faint); opacity: 1; }
+.sec-del, .mis-del { flex: none; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--faint); font-size: 18px; line-height: 1; }
+.sec-del:hover, .mis-del:hover { color: var(--danger); background: var(--accent-soft); }
+.text-btn { justify-self: start; min-height: 32px; padding: 4px 0; border: 0; background: transparent; color: var(--accent); }
+.add-sec { padding: 6px 12px; border-top: 1.5px solid var(--fg); }
+.missions { display: grid; gap: 4px; padding: 12px 8px 14px 12px; border-top: 1.5px solid var(--margin); }
+.mis-head { display: flex; align-items: baseline; gap: 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mis-head strong { font: 700 22px/1.2 var(--font-hand); letter-spacing: -.04em; color: var(--fg); }
+.mis { display: flex; align-items: center; gap: 10px; min-height: 38px; border-bottom: 1px solid var(--rule); }
+.mis input[type="checkbox"] { flex: none; width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+.mis input[type="text"] { flex: 1; min-width: 0; padding: 4px 0; border: 0; background: transparent; }
+.mis.done input[type="text"] { color: var(--faint); text-decoration: line-through; }
+.mis-static { padding: 4px 0; color: var(--fg); }
 .static-cell { padding: 0 12px; line-height: var(--lh); white-space: pre-wrap; overflow-wrap: anywhere; }
 .note-msg { padding: 40px 18px; color: var(--muted); }
 
@@ -236,7 +252,7 @@ h2, h3 { text-wrap: balance; }
     <header class="lp-head">
       <div>
         <h1 class="logo">밑줄</h1>
-        <p class="logo-sub">코넬식 학습 노트</p>
+        <p class="logo-sub">학습 필기 노트</p>
       </div>
       <button id="status" class="status" type="button" disabled>불러오는 중…</button>
       <div class="menu-wrap">
@@ -315,12 +331,26 @@ let downloadsP = Promise.resolve(null);
 
 function normalizeNote(id, d) {
   d = d || {};
-  const rows = Array.isArray(d.rows) ? d.rows.map((r) => ({ cue: String(r?.cue ?? ''), body: String(r?.body ?? '') })) : [];
+  const row = (r) => ({ sub: String(r?.sub ?? r?.cue ?? ''), body: String(r?.body ?? '') });
+  let sections;
+  if (Array.isArray(d.sections)) {
+    sections = d.sections.map((s) => {
+      const rows = Array.isArray(s?.rows) ? s.rows.map(row) : [];
+      return { title: String(s?.title ?? ''), rows: rows.length ? rows : [row()] };
+    });
+  } else {
+    // 예전 구성(단서 · 필기 · 요약)으로 저장된 노트: 대주제 하나 아래로 옮기고, 요약은 마지막 줄로 남긴다
+    const rows = Array.isArray(d.rows) ? d.rows.map(row) : [];
+    if (String(d.summary ?? '').trim()) rows.push({ sub: '요약', body: String(d.summary) });
+    sections = [{ title: '', rows: rows.length ? rows : [row()] }];
+  }
+  if (!sections.length) sections = [{ title: '', rows: [row()] }];
   return {
     id, title: String(d.title ?? ''), subject: String(d.subject ?? ''),
     tags: Array.isArray(d.tags) ? d.tags.map(String) : [],
-    rows: rows.length ? rows : [{ cue: '', body: '' }],
-    summary: String(d.summary ?? ''), pinned: !!d.pinned,
+    sections,
+    missions: Array.isArray(d.missions) ? d.missions.map((m) => ({ text: String(m?.text ?? ''), done: !!m?.done })) : [],
+    pinned: !!d.pinned,
     created: Number(d.created) || Date.now(), updated: Number(d.updated) || Date.now(),
     stage: Math.max(0, Math.min(STEPS.length, Number(d.stage) || 0)),
     due: /^\d{4}-\d{2}-\d{2}$/.test(d.due) ? d.due : addDays(ymd(), 1),
@@ -328,10 +358,13 @@ function normalizeNote(id, d) {
   };
 }
 const serializeNote = (n) => ({
-  kind: 'note', title: n.title, subject: n.subject, tags: n.tags, rows: n.rows, summary: n.summary, pinned: n.pinned,
+  kind: 'note', title: n.title, subject: n.subject, tags: n.tags, sections: n.sections, missions: n.missions, pinned: n.pinned,
   created: n.created, updated: n.updated, stage: n.stage, due: n.due, lastReview: n.lastReview, inkPages: n.inkPages,
 });
-const hasContent = (n) => !!(n.title.trim() || n.summary.trim() || n.inkPages || n.rows.some((r) => r.cue.trim() || r.body.trim()));
+const allRows = (n) => n.sections.flatMap((s) => s.rows);
+const realMissions = (n) => n.missions.filter((m) => m.text.trim());
+const hasContent = (n) => !!(n.title.trim() || n.inkPages || realMissions(n).length
+  || n.sections.some((s) => s.title.trim() || s.rows.some((r) => r.sub.trim() || r.body.trim())));
 const isDue = (n, today = ymd()) => hasContent(n) && n.due <= today;
 const subjectOf = (n) => S.meta.subjects.find((s) => s.id === n.subject) || null;
 function dueLabel(n) {
@@ -505,7 +538,7 @@ async function saveFile(filename, text) {
 
 /* ================= 목록 칸 ================= */
 function haystack(n) {
-  return [n.title, n.summary, n.tags.join(' '), subjectOf(n)?.name || '', ...n.rows.map((r) => r.cue + ' ' + r.body)].join('\n').toLowerCase();
+  return [n.title, n.tags.join(' '), subjectOf(n)?.name || '', ...n.sections.map((s) => s.title), ...allRows(n).map((r) => r.sub + ' ' + r.body), ...n.missions.map((m) => m.text)].join('\n').toLowerCase();
 }
 function visibleNotes() {
   const today = ymd();
@@ -542,7 +575,7 @@ function renderList() {
   const arr = visibleNotes();
   if (!arr.length) {
     let kids;
-    if (!S.notes.size) kids = [h('strong', null, '아직 노트가 없어요'), h('p', null, '수업 내용을 적고, 단서만 보고 떠올리며 복습해 보세요.'),
+    if (!S.notes.size) kids = [h('strong', null, '아직 노트가 없어요'), h('p', null, '대주제와 소주제로 나눠 필기하고, 미션으로 할 일을 챙겨 보세요.'),
       h('div', { class: 'row-btns dup-cta' }, h('button', { class: 'btn primary', type: 'button', onclick: () => createNote() }, '첫 노트 만들기'), h('button', { class: 'btn', type: 'button', onclick: addSample }, '예시 노트 넣어 보기'))];
     else if (S.q.trim()) kids = [h('strong', null, '찾는 노트가 없어요'), h('p', null, `"${S.q.trim()}"이(가) 들어간 노트가 없어요.`)];
     else if (S.filter === 'due') kids = [h('strong', null, '오늘 복습할 노트는 다 봤어요'), h('p', null, '복습 날짜가 된 노트가 여기에 모여요.')];
@@ -553,7 +586,8 @@ function renderList() {
   const today = ymd();
   root.replaceChildren(...arr.map((n) => {
     const s = subjectOf(n);
-    const snippet = n.rows.map((r) => r.body.trim() || r.cue.trim()).filter(Boolean).join(' · ') || n.summary.trim() || (n.inkPages ? '손필기' : '내용 없음');
+    const snippet = n.sections.map((x) => x.title.trim()).filter(Boolean).join(' · ') || allRows(n).map((r) => r.sub.trim() || r.body.trim()).filter(Boolean).join(' · ') || (n.inkPages ? '손필기' : '내용 없음');
+    const ms = realMissions(n);
     return h('button', { type: 'button', class: 'note-item', 'aria-current': String(n.id === S.currentId), onclick: () => selectNote(n.id) },
       h('div', { class: 'ni-top' },
         h('span', { class: 'dot', style: s ? `background:var(--s${s.color % 6})` : null }),
@@ -564,7 +598,8 @@ function renderList() {
       h('div', { class: 'ni-snippet' }, snippet),
       h('div', { class: 'ni-foot' },
         isDue(n, today) ? h('span', { class: 'tagchip' }, dueLabel(n)) : (hasContent(n) ? h('span', null, dueLabel(n)) : null),
-        hasContent(n) && h('span', null, `· ${n.stage}/${STEPS.length}단계`)));
+        hasContent(n) && h('span', null, `· ${n.stage}/${STEPS.length}단계`),
+        ms.length ? h('span', null, `· 미션 ${ms.filter((m) => m.done).length}/${ms.length}`) : null));
   }));
 }
 
@@ -587,14 +622,22 @@ function addSample() {
   let subj = S.meta.subjects.find((s) => s.name === '생명과학');
   if (!subj) { subj = { id: newId('s'), name: '생명과학', color: 1 }; S.meta.subjects.push(subj); saveMeta(); }
   createNote({
-    title: '[예시] 광합성 — 명반응과 암반응', subject: subj.id, tags: ['예시'],
-    rows: [
-      { cue: '광합성이란?', body: '빛에너지로 CO₂와 H₂O에서 포도당을 만드는 과정\n6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂' },
-      { cue: '명반응은 어디서?', body: '엽록체의 틸라코이드 막\n물이 분해되며 O₂ 방출, ATP와 NADPH 생성' },
-      { cue: '암반응(캘빈 회로)', body: '스트로마에서 진행\nATP·NADPH를 써서 CO₂를 당으로 고정' },
-      { cue: '두 반응은 어떻게 이어지나?', body: '명반응이 만든 ATP·NADPH가 암반응의 에너지원' },
+    title: '[예시] 광합성', subject: subj.id, tags: ['예시'],
+    sections: [
+      { title: '광합성의 개요', rows: [
+        { sub: '정의', body: '빛에너지로 CO₂와 H₂O에서 포도당을 만드는 과정' },
+        { sub: '전체 반응식', body: '6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂' },
+      ] },
+      { title: '두 단계', rows: [
+        { sub: '명반응', body: '엽록체의 틸라코이드 막에서 진행\n물이 분해되며 O₂ 방출, ATP와 NADPH 생성' },
+        { sub: '암반응(캘빈 회로)', body: '스트로마에서 진행\nATP·NADPH를 써서 CO₂를 당으로 고정' },
+        { sub: '두 반응의 연결', body: '명반응이 만든 ATP·NADPH가 암반응의 에너지원' },
+      ] },
     ],
-    summary: '빛으로 만든 ATP·NADPH(명반응)로 CO₂를 당으로 바꾼다(암반응).',
+    missions: [
+      { text: '명반응과 암반응의 차이를 표로 정리하기', done: true },
+      { text: '교과서 확인 문제 3개 풀기', done: false },
+    ],
   });
   toast('예시 노트를 넣었어요. 지워도 괜찮아요.');
 }
@@ -647,17 +690,20 @@ function pickView() {
   return h('div', { class: 'sheet' }, h('p', { class: 'note-msg' }, '왼쪽 목록에서 노트를 고르거나 새 노트를 만드세요.'));
 }
 function welcomeView() {
-  const row = (cue, body) => h('div', { class: 'row' }, h('div', { class: 'cue static-cell' }, cue), h('div', { class: 'static-cell' }, body));
+  const row = (sub, body) => h('div', { class: 'row' }, h('div', { class: 'sub static-cell' }, sub), h('div', { class: 'static-cell' }, body));
   return [
     h('div', { class: 'bar' }, backBtn()),
     h('div', { class: 'sheet' },
-      h('div', { class: 'sheet-head' }, h('h2', { class: 'title' }, '적고, 가리고, 떠올리기'),
-        h('p', { class: 'meta' }, '밑줄은 코넬식 필기법으로 적고, 잊기 전에 다시 보게 해 주는 학습 노트예요.')),
-      h('div', { class: 'cols' }, h('span', null, '단서 · 질문'), h('span', null, '필기')),
-      row('오른쪽 칸', '수업을 들으며 내용을 적어요. 글로 적기 어려운 그림과 수식은 손필기 쪽에 그려요.'),
-      row('왼쪽 칸', '수업이 끝나면 핵심어나 질문을 한 줄씩 붙여요. 이 칸이 복습할 때 문제가 돼요.'),
-      row('복습하기', '필기를 가리고 단서만 보고 답을 떠올려요. 다 맞히면 다음 복습이 1 → 3 → 7 → 14 → 30일로 멀어져요.'),
-      h('div', { class: 'summary' }, h('label', null, '요약'), h('div', { class: 'static-cell' }, '맨 아래에는 노트 전체를 한두 문장으로 줄여 적어요.'))),
+      h('div', { class: 'sheet-head' }, h('h2', { class: 'title' }, '제목: 오늘 배운 것의 이름'),
+        h('p', { class: 'meta' }, '밑줄은 노트 한 장을 제목 · 대주제 · 소주제 · 내용 필기 · 미션으로 나눠 적는 학습 필기 노트예요.')),
+      h('section', { class: 'sec' },
+        h('div', { class: 'sec-head' }, h('span', { class: 'sec-no' }, '대주제 1'), h('div', { class: 'sec-title' }, '단원이나 큰 흐름을 적어요')),
+        h('div', { class: 'cols' }, h('span', null, '소주제'), h('span', null, '내용 필기')),
+        row('작은 갈래', '대주제 아래 소주제를 왼쪽 칸에 세우고, 오른쪽 칸에 내용을 필기해요. 그림과 수식은 손필기 탭에 그려요.'),
+        row('복습하기', '내용을 가리고 소주제만 보고 떠올려요. 다 떠올리면 다음 복습이 1 → 3 → 7 → 14 → 30일로 멀어져요.')),
+      h('div', { class: 'missions' },
+        h('div', { class: 'mis-head' }, h('strong', null, '미션')),
+        h('div', { class: 'mis-static' }, '필기한 뒤에 할 일(문제 풀기, 암기, 과제)을 적고, 끝내면 체크해요.'))),
     h('div', { class: 'bar' },
       h('button', { class: 'btn primary', type: 'button', onclick: () => createNote() }, '첫 노트 만들기'),
       h('button', { class: 'btn', type: 'button', onclick: addSample }, '예시 노트 넣어 보기')),
@@ -681,41 +727,112 @@ function growRow(el) {
   ts.forEach((t) => { max = Math.max(max, t.scrollHeight); });
   ts.forEach((t) => { t.style.height = max + 'px'; });
 }
-const growAll = (root) => root.querySelectorAll('.row, .summary').forEach(growRow);
+const growAll = (root) => root.querySelectorAll('.row').forEach(growRow);
 function sheetView(note) {
   const subj = h('select', { id: 'note-subject', 'aria-label': '과목', onchange: (e) => { note.subject = e.target.value; touch(note); } },
     h('option', { value: '' }, '과목 없음'), S.meta.subjects.map((s) => h('option', { value: s.id }, s.name)));
   subj.value = subjectOf(note) ? note.subject : '';
-  const rowsEl = h('div', { class: 'rows' });
-  const makeRow = (row) => {
+  const blank = () => ({ sub: '', body: '' });
+
+  /* 소주제 | 내용 필기 한 줄 */
+  const makeRow = (sec, row) => {
     const el = h('div', { class: 'row' });
     const onKey = (e) => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        const fresh = { cue: '', body: '' };
-        note.rows.splice(note.rows.indexOf(row) + 1, 0, fresh);
-        const freshEl = makeRow(fresh);
-        el.after(freshEl); growRow(freshEl); freshEl.querySelector('.cue').focus();
+        const fresh = blank();
+        sec.rows.splice(sec.rows.indexOf(row) + 1, 0, fresh);
+        const freshEl = makeRow(sec, fresh);
+        el.after(freshEl); growRow(freshEl); freshEl.querySelector('.sub').focus();
         touch(note);
       }
     };
-    const cue = h('textarea', { class: 'cue', rows: 1, placeholder: '단서 · 질문', 'aria-label': '단서 또는 질문', value: row.cue, onkeydown: onKey,
-      oninput: (e) => { row.cue = e.target.value; growRow(el); touch(note); } });
-    const body = h('textarea', { class: 'body', rows: 2, placeholder: '필기', 'aria-label': '필기', value: row.body, onkeydown: onKey,
+    const sub = h('textarea', { class: 'sub', rows: 1, placeholder: '소주제', 'aria-label': '소주제', value: row.sub, onkeydown: onKey,
+      oninput: (e) => { row.sub = e.target.value; growRow(el); touch(note); } });
+    const body = h('textarea', { class: 'body', rows: 2, placeholder: '내용 필기', 'aria-label': '내용 필기', value: row.body, onkeydown: onKey,
       oninput: (e) => { row.body = e.target.value; growRow(el); touch(note); } });
-    const del = h('button', { type: 'button', class: 'row-del', 'aria-label': '이 줄 지우기', title: '이 줄 지우기', onclick: () => {
-      if (note.rows.length === 1) { row.cue = ''; row.body = ''; cue.value = ''; body.value = ''; growRow(el); }
-      else { note.rows.splice(note.rows.indexOf(row), 1); el.remove(); }
+    const del = h('button', { type: 'button', class: 'row-del', 'aria-label': '이 소주제 지우기', title: '이 소주제 지우기', onclick: () => {
+      if (sec.rows.length === 1) { row.sub = ''; row.body = ''; sub.value = ''; body.value = ''; growRow(el); }
+      else { sec.rows.splice(sec.rows.indexOf(row), 1); el.remove(); }
       touch(note);
     } }, '×');
-    el.append(cue, body, del);
+    el.append(sub, body, del);
     return el;
   };
-  rowsEl.append(...note.rows.map(makeRow));
-  const summaryEl = h('div', { class: 'summary' },
-    h('label', { for: 'note-summary' }, '요약'),
-    h('textarea', { id: 'note-summary', rows: 2, placeholder: '이 노트를 한두 문장으로 줄이면?', value: note.summary,
-      oninput: (e) => { note.summary = e.target.value; growRow(summaryEl); touch(note); } }));
+
+  /* 대주제 하나: 머리줄 + 소주제 줄들 */
+  const secsEl = h('div', { class: 'secs' });
+  const renumber = () => secsEl.querySelectorAll('.sec-no').forEach((n, i) => { n.textContent = `대주제 ${i + 1}`; });
+  const makeSection = (sec) => {
+    const el = h('section', { class: 'sec' });
+    const rowsEl = h('div', { class: 'rows' }, sec.rows.map((r) => makeRow(sec, r)));
+    const wipe = () => {
+      if (note.sections.length === 1) {
+        sec.title = ''; sec.rows = [blank()];
+        const fresh = makeSection(sec);
+        el.replaceWith(fresh); growAll(fresh);
+      } else { note.sections.splice(note.sections.indexOf(sec), 1); el.remove(); }
+      renumber(); touch(note);
+    };
+    const filled = () => sec.rows.filter((r) => r.sub.trim() || r.body.trim()).length;
+    add(el,
+      h('div', { class: 'sec-head' },
+        h('span', { class: 'sec-no' }),
+        h('input', { class: 'sec-title', type: 'text', placeholder: '대주제', 'aria-label': '대주제', maxlength: 200, value: sec.title,
+          oninput: (e) => { sec.title = e.target.value; touch(note); } }),
+        h('button', { type: 'button', class: 'sec-del', 'aria-label': '이 대주제 지우기', title: '이 대주제 지우기', onclick: () => {
+          if (!sec.title.trim() && !filled()) { wipe(); return; }
+          dialog({
+            title: '이 대주제를 지울까요?',
+            body: h('p', null, `"${sec.title.trim() || '이름 없는 대주제'}"와 그 아래 소주제 ${filled()}개가 지워져요.`),
+            actions: [{ label: '취소' }, { label: '지우기', kind: 'danger', fn: wipe }],
+          });
+        } }, '×')),
+      h('div', { class: 'cols' }, h('span', null, '소주제'), h('span', null, '내용 필기')),
+      rowsEl,
+      h('div', { class: 'add-line' }, h('span'), h('div', null,
+        h('button', { type: 'button', class: 'text-btn', onclick: () => {
+          const fresh = blank();
+          sec.rows.push(fresh);
+          const rowEl = makeRow(sec, fresh);
+          rowsEl.append(rowEl); growRow(rowEl); rowEl.querySelector('.sub').focus();
+          touch(note);
+        } }, '+ 소주제 추가'),
+        h('span', { class: 'hint' }, 'Ctrl+Enter로도 추가'))));
+    return el;
+  };
+  add(secsEl, note.sections.map(makeSection));
+  renumber();
+
+  /* 미션: 필기한 뒤에 할 일 */
+  const misList = h('div');
+  const misCount = h('span');
+  const paintCount = () => { const ms = realMissions(note); misCount.textContent = ms.length ? `${ms.filter((m) => m.done).length}/${ms.length} 완료` : '필기한 뒤에 할 일을 적어 두세요'; };
+  const addMission = (after) => {
+    const m = { text: '', done: false };
+    const i = after ? note.missions.indexOf(after) + 1 : note.missions.length;
+    note.missions.splice(i, 0, m);
+    const el = makeMission(m);
+    if (i < misList.children.length) misList.children[i].before(el); else misList.append(el);
+    el.querySelector('input[type="text"]').focus();
+    touch(note);
+  };
+  const makeMission = (m) => {
+    const el = h('div', { class: m.done ? 'mis done' : 'mis' });
+    const box = h('input', { type: 'checkbox', 'aria-label': '미션 완료', onchange: (e) => { m.done = e.target.checked; el.classList.toggle('done', m.done); paintCount(); touch(note); } });
+    box.checked = m.done;
+    el.append(box,
+      h('input', { type: 'text', placeholder: '할 일 (예: 확인 문제 3개 풀기)', 'aria-label': '미션', maxlength: 300, value: m.text,
+        oninput: (e) => { m.text = e.target.value; paintCount(); touch(note); },
+        onkeydown: (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addMission(m); } } }),
+      h('button', { type: 'button', class: 'mis-del', 'aria-label': '이 미션 지우기', title: '이 미션 지우기', onclick: () => {
+        note.missions.splice(note.missions.indexOf(m), 1); el.remove(); paintCount(); touch(note);
+      } }, '×'));
+    return el;
+  };
+  add(misList, note.missions.map(makeMission));
+  paintCount();
+
   const sheet = h('div', { class: 'sheet' },
     h('div', { class: 'sheet-head' },
       h('input', { id: 'note-title', class: 'title', type: 'text', placeholder: '제목을 적으세요', 'aria-label': '제목', maxlength: 200, value: note.title,
@@ -724,18 +841,18 @@ function sheetView(note) {
         h('span', { class: 'when' }, `${fmtDay(new Date(note.created))} 작성 · ${dueLabel(note)} · ${note.stage}/${STEPS.length}단계`),
         h('input', { id: 'note-tags', type: 'text', placeholder: '태그 (쉼표로 구분)', 'aria-label': '태그', value: note.tags.join(', '),
           oninput: (e) => { note.tags = e.target.value.split(',').map((t) => t.trim()).filter(Boolean); touch(note); } }))),
-    h('div', { class: 'cols' }, h('span', null, '단서 · 질문'), h('span', null, '필기')),
-    rowsEl,
-    h('div', { class: 'add-line' }, h('span'), h('div', null,
-      h('button', { type: 'button', onclick: () => {
-        const fresh = { cue: '', body: '' };
-        note.rows.push(fresh);
-        const el = makeRow(fresh);
-        rowsEl.append(el); growRow(el); el.querySelector('.cue').focus();
-        touch(note);
-      } }, '+ 줄 추가'),
-      h('span', { class: 'hint' }, 'Ctrl+Enter로도 추가'))),
-    summaryEl);
+    secsEl,
+    h('div', { class: 'add-sec' }, h('button', { type: 'button', class: 'text-btn', id: 'add-section', onclick: () => {
+      const sec = { title: '', rows: [blank()] };
+      note.sections.push(sec);
+      const el = makeSection(sec);
+      secsEl.append(el); renumber(); growAll(el); el.querySelector('.sec-title').focus();
+      touch(note);
+    } }, '+ 대주제 추가')),
+    h('div', { class: 'missions' },
+      h('div', { class: 'mis-head' }, h('strong', null, '미션'), misCount),
+      misList,
+      h('button', { type: 'button', class: 'text-btn', id: 'add-mission', onclick: () => addMission() }, '+ 미션 추가')));
   if (window.ResizeObserver) {
     let w = 0;
     const ro = new ResizeObserver(() => { if (!sheet.isConnected) { ro.disconnect(); return; } if (sheet.clientWidth !== w) { w = sheet.clientWidth; growAll(sheet); } });
@@ -935,9 +1052,7 @@ new MutationObserver(repaintInk).observe(document.documentElement, { attributes:
 
 /* ================= 복습 ================= */
 function cardsOf(note) {
-  const cs = note.rows.filter((r) => r.cue.trim() && r.body.trim()).map((r) => ({ q: r.cue.trim(), a: r.body.trim() }));
-  if (note.summary.trim()) cs.push({ q: '이 노트를 한두 문장으로 줄이면?', a: note.summary.trim() });
-  return cs;
+  return note.sections.flatMap((s) => s.rows.filter((r) => r.sub.trim() && r.body.trim()).map((r) => ({ ctx: s.title.trim(), q: r.sub.trim(), a: r.body.trim() })));
 }
 function startReview(note) {
   flush();
@@ -970,6 +1085,7 @@ function reviewView(note) {
       R.scored
         ? h('p', null, R.perfect ? `다음 복습은 ${gap}일 뒤, ${fmtDay(parseYmd(note.due))}이에요.` : '헷갈린 내용이 있어 내일 다시 볼게요.')
         : h('p', null, '연습으로 다시 본 것은 복습 일정에 넣지 않았어요.'),
+      realMissions(note).some((m) => !m.done) ? h('p', null, `아직 끝내지 않은 미션이 ${realMissions(note).filter((m) => !m.done).length}개 있어요.`) : null,
       h('ol', { class: 'steps', 'aria-label': '복습 간격' }, STEPS.map((d, i) => h('li', { class: i === Math.min(note.stage, STEPS.length - 1) ? 'on' : null }, `${d}일`))),
       h('div', { class: 'bar' },
         R.missed.length ? h('button', { type: 'button', class: 'btn primary', onclick: () => { S.review = { cards: R.missed, i: 0, shown: false, missed: [], scored: false, done: false, total: R.missed.length }; renderEditor(); } }, '헷갈린 것만 다시') : null,
@@ -978,8 +1094,8 @@ function reviewView(note) {
   }
   if (!R.cards.length) {
     add(box,
-      h('p', null, '단서와 필기가 함께 적힌 줄이 없어서, 문제 대신 노트를 통째로 보여 드려요. 단서 칸을 채우면 가리고 떠올리기로 복습할 수 있어요.'),
-      note.rows.filter((r) => r.cue.trim() || r.body.trim()).map((r) => h('div', { class: 'a' }, [r.cue.trim(), r.body.trim()].filter(Boolean).join('\n'))),
+      h('p', null, '소주제와 내용 필기가 함께 적힌 줄이 없어서, 문제 대신 노트를 통째로 보여 드려요. 소주제 칸을 채우면 가리고 떠올리기로 복습할 수 있어요.'),
+      note.sections.map((s) => [s.title.trim(), ...s.rows.map((r) => [r.sub.trim(), r.body.trim()].filter(Boolean).join('\n'))].filter(Boolean).join('\n\n')).filter(Boolean).map((t) => h('div', { class: 'a' }, t)),
       note.inkPages ? h('p', { class: 'count' }, `손필기 ${note.inkPages}쪽은 노트의 손필기 탭에서 볼 수 있어요.`) : null,
       h('div', { class: 'bar' }, h('button', { type: 'button', class: 'btn primary', onclick: () => finishReview(note, true) }, '다 읽었어요')));
     return [head, box];
@@ -992,16 +1108,16 @@ function reviewView(note) {
   };
   add(box,
     h('div', { class: 'progress', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': R.cards.length, 'aria-valuenow': R.i }, h('i', { style: `width:${(R.i / R.cards.length) * 100}%` })),
-    h('p', { class: 'count' }, `${R.i + 1} / ${R.cards.length}`),
+    h('p', { class: 'count' }, `${R.i + 1} / ${R.cards.length}${card.ctx ? ` · ${card.ctx}` : ''}`),
     h('p', { class: 'q' }, card.q),
-    R.shown ? h('div', { class: 'a' }, card.a) : h('div', { class: 'a veil' }, '필기를 가려 두었어요. 먼저 머릿속으로 답해 보세요.'),
+    R.shown ? h('div', { class: 'a' }, card.a) : h('div', { class: 'a veil' }, '내용을 가려 두었어요. 먼저 머릿속으로 답해 보세요.'),
     R.shown
       ? h('div', { class: 'bar' },
           h('button', { type: 'button', class: 'btn', id: 'rv-miss', onclick: () => answer(false) }, '헷갈려요'),
           h('button', { type: 'button', class: 'btn primary', id: 'rv-ok', onclick: () => answer(true) }, '떠올렸어요'),
           h('span', { class: 'kbd' }, '키보드: 1 헷갈려요 · 2 떠올렸어요'))
       : h('div', { class: 'bar' },
-          h('button', { type: 'button', class: 'btn primary', id: 'rv-show', onclick: () => { R.shown = true; renderEditor(); } }, '필기 보기'),
+          h('button', { type: 'button', class: 'btn primary', id: 'rv-show', onclick: () => { R.shown = true; renderEditor(); } }, '내용 보기'),
           h('span', { class: 'kbd' }, '키보드: 스페이스')));
   return [head, box];
 }
@@ -1042,13 +1158,18 @@ function openSubjects() {
 function exportMarkdown(note) {
   const s = subjectOf(note);
   const lines = [`# ${note.title.trim() || '제목 없는 노트'}`, '',
-    `- 과목: ${s ? s.name : '없음'}`, `- 작성: ${ymd(new Date(note.created))}`, note.tags.length ? `- 태그: ${note.tags.join(', ')}` : null, '', '## 필기', ''];
-  for (const r of note.rows) {
-    if (!r.cue.trim() && !r.body.trim()) continue;
-    if (r.cue.trim()) lines.push(`**${r.cue.trim().replace(/\n+/g, ' ')}**`, '');
-    if (r.body.trim()) lines.push(r.body.trim(), '');
-  }
-  if (note.summary.trim()) lines.push('## 요약', '', note.summary.trim(), '');
+    `- 과목: ${s ? s.name : '없음'}`, `- 작성: ${ymd(new Date(note.created))}`, note.tags.length ? `- 태그: ${note.tags.join(', ')}` : null, ''];
+  note.sections.forEach((sec, i) => {
+    const rows = sec.rows.filter((r) => r.sub.trim() || r.body.trim());
+    if (!sec.title.trim() && !rows.length) return;
+    lines.push(`## ${sec.title.trim() || `대주제 ${i + 1}`}`, '');
+    for (const r of rows) {
+      if (r.sub.trim()) lines.push(`### ${r.sub.trim().replace(/\n+/g, ' ')}`, '');
+      if (r.body.trim()) lines.push(r.body.trim(), '');
+    }
+  });
+  const ms = realMissions(note);
+  if (ms.length) lines.push('## 미션', '', ...ms.map((m) => `- [${m.done ? 'x' : ' '}] ${m.text.trim()}`), '');
   if (note.inkPages) lines.push(`> 손필기 ${note.inkPages}쪽은 이 파일에 들어가지 않아요. 백업(.json)에는 포함돼요.`, '');
   const name = (note.title.trim() || '노트').replace(/[\\/:*?"<>|\n]+/g, ' ').slice(0, 60).trim() || '노트';
   saveFile(`${name}.md`, lines.filter((l) => l != null).join('\n'));
@@ -1064,7 +1185,7 @@ async function exportBackup() {
       if (doc) ink[path] = doc;
     }
   } catch { toast('손필기를 읽지 못해 백업을 멈췄어요. 다시 시도해 주세요.'); return; }
-  const data = { app: 'miljul', version: 1, exported: new Date().toISOString(), meta: S.meta, notes: [...S.notes.values()].map((n) => ({ id: n.id, ...serializeNote(n) })), ink };
+  const data = { app: 'miljul', version: 2, exported: new Date().toISOString(), meta: S.meta, notes: [...S.notes.values()].map((n) => ({ id: n.id, ...serializeNote(n) })), ink };
   saveFile(`miljul-backup-${ymd()}.json`, JSON.stringify(data));
 }
 async function importBackup(file) {
