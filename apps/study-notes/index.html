@@ -747,9 +747,9 @@ function sheetView(note) {
         touch(note);
       }
     };
-    const sub = h('textarea', { class: 'sub', rows: 1, placeholder: '소주제', 'aria-label': '소주제', value: row.sub, onkeydown: onKey,
+    const sub = h('textarea', { class: 'sub', rows: 1, 'aria-label': '소주제', value: row.sub, onkeydown: onKey,
       oninput: (e) => { row.sub = e.target.value; growRow(el); touch(note); } });
-    const body = h('textarea', { class: 'body', rows: 2, placeholder: '내용 필기', 'aria-label': '내용 필기', value: row.body, onkeydown: onKey,
+    const body = h('textarea', { class: 'body', rows: 2, 'aria-label': '내용 필기', value: row.body, onkeydown: onKey,
       oninput: (e) => { row.body = e.target.value; growRow(el); touch(note); } });
     const del = h('button', { type: 'button', class: 'row-del', 'aria-label': '이 소주제 지우기', title: '이 소주제 지우기', onclick: () => {
       if (sec.rows.length === 1) { row.sub = ''; row.body = ''; sub.value = ''; body.value = ''; growRow(el); }
